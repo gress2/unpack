@@ -16,9 +16,26 @@ std::vector<unpack<std::tuple<int, double, float>>> v;
 By wrapping the `std::tuple` in an `unpack` we can store the data as if it were a tuple of vectors but program around it as though it was a vector of tuples. `unpack` depends upon a template specialization of `std::vector`.
 
 ### Usage
+##### Supported types
+1. POD
+2. Standard containers
 ##### Instantiation
+Here are a few examples of how you might instantiate a `std::vector<unpack<T>>`:
+```c++
+struct A {
+    int x;
+    double y;
+};
+std::vector<unpack<A>> v1;
+std::vector<unpack<std::array<int, 2>> v2;
+std::vector<unpack<std::tuple<char, float>> v3;
+```
+##### Modifying
+You can modify a `std::vector<unpack<T>>` in the same way in which you would modify `std::vector<T>`.
 
-##### Inserting elements
-
+```c++
+std::vector<unpack<std::array<int, 2>> v;
+v.push_back(std::array<int, 2>(3, 4));
+v.erase(v.begin());
+```
 ##### Accessing elements
-

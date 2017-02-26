@@ -46,3 +46,13 @@ std::vector<unpack<std::pair<int, double>>> v;
 v.push_back(std::pair<int, double>(1, 1.0f));
 double tmp = v[0].second;
 ```
+##### Iterators
+Unsurprisingly, a `std::vector<unpack<T>>::iterator` will "point" to an element of type `T`.
+```c++
+std::vector<unpack<std::array<int, 2>>> v;
+...
+std::vector<unpack<std::array<int, 2>>>::iterator iter;
+for (iter = v.begin(); iter != v.end(); ++iter) {
+    std::cout << (*iter)[0] << "," << (*iter)[1] << std::endl; 
+}
+```

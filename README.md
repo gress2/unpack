@@ -1,6 +1,6 @@
 # unpack
 
-##### What is it?
+### What is it?
 Commonly, constructs representing compound data types (structs, tuples, arrays, etc.) are stored in multitudes in various standard containers. For example:
 ```c++
 std::vector<std::tuple<int, double, float>> v;
@@ -13,4 +13,12 @@ It would be useful to be able to quickly compare the performance of these two da
 ```c++
 std::vector<unpack<std::tuple<int, double, float>>> v;
 ```
-By wrapping the `std::tuple` in an `unpack` we can store the data as if it were a tuple of arrays but program around it as though it was a vector of tuples. 
+By wrapping the `std::tuple` in an `unpack` we can store the data as if it were a tuple of vectors but program around it as though it was a vector of tuples. `unpack` depends upon a template specialization of `std::vector`.
+
+### Usage
+##### Instantiation
+
+##### Inserting elements
+
+##### Accessing elements
+

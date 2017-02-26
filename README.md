@@ -19,6 +19,7 @@ By wrapping the `std::tuple` in an `unpack` we can store the data as if it were 
 ##### Supported types
 1. POD
 2. Standard containers
+
 ##### Instantiation
 Here are a few examples of how you might instantiate a `std::vector<unpack<T>>`:
 ```c++
@@ -27,15 +28,21 @@ struct A {
     double y;
 };
 std::vector<unpack<A>> v1;
-std::vector<unpack<std::array<int, 2>> v2;
-std::vector<unpack<std::tuple<char, float>> v3;
+std::vector<unpack<std::array<int, 2>>> v2;
+std::vector<unpack<std::tuple<char, float>>> v3;
 ```
 ##### Modifying
 You can modify a `std::vector<unpack<T>>` in the same way in which you would modify `std::vector<T>`.
 
 ```c++
-std::vector<unpack<std::array<int, 2>> v;
+std::vector<unpack<std::array<int, 2>>> v;
 v.push_back(std::array<int, 2>(3, 4));
 v.erase(v.begin());
 ```
 ##### Accessing elements
+Using the `[]` operator and other element access functions will return a reference of type `T` for `std::vector<unpack<T>>`.
+```c++
+std::vector<unpack<std::pair<int, double>>> v;
+v.push_back(std::pair<int, double>(1, 1.0f));
+double tmp = v[0].second;
+```

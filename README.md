@@ -9,7 +9,7 @@ When accessing data of this format, cache lines filled with with these tuples, o
 ```c++
 std::tuple<std::vector<int>, std::vector<double>, std::vector<float>> t;
 ```
-It would be useful to be able to quickly compare the performance of these two data repsentations without the need to restructure your code to support the differences. This is the goal of `unpack`. `unpack` will be a variadic template class which serves as a marker for its data to be treated differently by standard containers. Consider the following usage:
+It would be useful to be able to quickly compare the performance of these two data repsentations without the need to restructure your code to support the differences. This is the goal of `unpack`. `unpack` will be a template class which serves as a marker for its data to be treated differently by standard containers. Consider the following usage:
 ```c++
 std::vector<unpack<std::tuple<int, double, float>>> v;
 ```
@@ -40,14 +40,14 @@ v.push_back(std::array<int, 2>(3, 4));
 v.erase(v.begin());
 ```
 ##### Accessing elements
-Using the `[]` operator and other element access functions will return a reference of type `T` for `std::vector<unpack<T>>`.
+Using the `[]` operator and other element access functions will return an element of type `T` with "data members" as references for `std::vector<unpack<T>>`. For example, given `std::vector<unpack<std::pair<int, double>>>`, `[]` returns an element of type `std::pair<int&, double&>`. 
 ```c++
 std::vector<unpack<std::pair<int, double>>> v;
 v.push_back(std::pair<int, double>(1, 1.0f));
 double tmp = v[0].second;
 ```
 ##### Iterators
-Unsurprisingly, a `std::vector<unpack<T>>::iterator` will "point" to an element of type `T`.
+Unsurprisingly, a `std::vector<unpack<T>>::iterator` will "point" to an element of type `T` (tentative).
 ```c++
 std::vector<unpack<std::array<int, 2>>> v;
 ...

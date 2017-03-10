@@ -1,2 +1,2 @@
 template <typename... T>
-struct unpack {};
+class unpack {};

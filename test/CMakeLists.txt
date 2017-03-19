@@ -1,4 +1,6 @@
 include_directories( include )
-add_executable ( test1 test1.cpp )
-
-add_test ( NAME test1 COMMAND test1 )
+include_directories( ${gtest_SOURCE_DIR}/include )
+set ( test_sources unit_tests.cpp )
+add_executable( unit_tests ${test_sources} )
+target_link_libraries( unit_tests gtest_main )
+add_test ( NAME unit_tests COMMAND unit_tests )

@@ -2,6 +2,7 @@
 #include <iostream>
 #include "is_stl_container.hpp"
 #include "unpack_inversion.hpp"
+#include "tuple_for_each.hpp"
 
 #define VECTOR_INIT_CAPACITY 64
 
@@ -36,9 +37,12 @@ class vector<unpack<T>> {
         void push_back(const T& elem) {
             if (_size + sizeof(data_type) >= _capacity) {
                 double_capacity();
-            }
+            }         
+
+            tuple_for_each(elem, *_data, [](auto& x, auto& y) {
+                y.push_back(x);
+            });
             
-            //_data[_size] = elem;
             _size++;
         }
         ~vector() {

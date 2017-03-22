@@ -1,8 +1,8 @@
 #include <vector>
 #include <iostream>
 #include "is_stl_container.hpp"
-#include "unpack_inversion.hpp"
-#include "tuple_for_each.hpp"
+#include "unpack_type_utils.hpp"
+#include "tuple_utils.hpp"
 
 #define VECTOR_INIT_CAPACITY 64
 
@@ -13,6 +13,7 @@ template <typename T>
 class vector<unpack<T>> {
     private:
         using data_type = typename unpack_inversion<T>::type;
+        using ref_type = typename unpack_ref_type<T>::type;
         data_type* _data;
         size_t _size, _capacity;
         void double_capacity() {
@@ -45,6 +46,13 @@ class vector<unpack<T>> {
             
             _size++;
         }
+
+        ref_type operator[](size_t index) {
+            // vector<unpack<tuple<int, double>> -> tuple<vector<int>, vector<double>> -> tuple<int&, double&>
+
+            return tuple_r_at_index(*_data, index); 
+        }
+
         ~vector() {
             delete [] _data;
         }

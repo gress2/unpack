@@ -23,5 +23,17 @@ template <typename Tuple1, typename Tuple2, typename Func>
 void tuple_for_each(Tuple1&& tuple1, Tuple2&& tuple2, Func&& f) {
     constexpr std::size_t N = std::tuple_size<std::remove_reference_t<Tuple1>>::value;
     tuple_for_each_helper(std::forward<Tuple1>(tuple1), std::forward<Tuple2>(tuple2),
-                           std::forward<Func>(f), std::make_index_sequence<N>{});
+                          std::forward<Func>(f), std::make_index_sequence<N>{});
 }
+
+template <typename Tuple, std::size_t ... Indices>
+auto tuple_r_at_index_helper(Tuple&& tuple, std::size_t index, std::index_sequence<Indices ...>) {
+
+}
+
+template <typename Tuple> 
+auto tuple_r_at_index(Tuple&& tuple, std::size_t index) {
+    constexpr std::size_t N = std::tuple_size<Tuple>::value;
+    return tuple_r_at_index_helper(std::forward<Tuple>(tuple), 
+                                   index, std::make_index_sequence<N>{}); 
+} 

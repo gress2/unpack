@@ -28,12 +28,12 @@ void tuple_for_each(Tuple1&& tuple1, Tuple2&& tuple2, Func&& f) {
 
 template <typename Tuple, std::size_t ... Indices>
 auto tuple_r_at_index_helper(Tuple&& tuple, std::size_t index, std::index_sequence<Indices ...>) {
-
+    return std::tie(std::get<Indices>(std::forward<Tuple>(tuple))[index] ... );
 }
 
 template <typename Tuple> 
 auto tuple_r_at_index(Tuple&& tuple, std::size_t index) {
-    constexpr std::size_t N = std::tuple_size<Tuple>::value;
+    constexpr std::size_t N = std::tuple_size<std::remove_reference_t<Tuple>>::value;
     return tuple_r_at_index_helper(std::forward<Tuple>(tuple), 
                                    index, std::make_index_sequence<N>{}); 
 } 

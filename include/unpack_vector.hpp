@@ -6,6 +6,11 @@
 
 #define VECTOR_INIT_CAPACITY 64
 
+template <typename T>
+void print() {
+    std::cout << __PRETTY_FUNCTION__ << std::endl;
+}
+
 namespace std
 {
 
@@ -48,8 +53,6 @@ class vector<unpack<T>> {
         }
 
         ref_type operator[](size_t index) {
-            // vector<unpack<tuple<int, double>> -> tuple<vector<int>, vector<double>> -> tuple<int&, double&>
-
             return tuple_r_at_index(*_data, index); 
         }
 

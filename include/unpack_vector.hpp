@@ -59,6 +59,54 @@ class vector<unpack<T>> {
         ~vector() {
             delete [] _data;
         }
+
+        class iterator {
+            public:
+                iterator(data_type* d, size_t pos)
+                    : _data(d), 
+                      _pos(pos), 
+                      _target(tuple_r_at_index(*d, pos)),
+                      _ptr(&_target) 
+                {
+                }
+                iterator& operator++() {
+                    _pos++;
+                    return *this;     
+                }
+                iterator operator++(int) {
+                    vector<unpack<T>>::iterator it = *this;
+                    _pos++;
+                    return it;    
+                } 
+                ref_type* operator->() {
+                    update_target();
+                    return _ptr;
+                }
+                ref_type& operator*() {
+                    update_target(); 
+                    return *_ptr;
+                }
+                bool operator==(const iterator& rhs) {
+                    return ((rhs._data == _data) && (rhs._pos == _pos));                    
+                }
+                bool operator!=(const iterator& rhs) {
+                    return !((rhs._data == _data) && (rhs._pos == _pos));                    
+                }
+            private:
+                data_type* _data;
+                ref_type* _ptr;
+                ref_type _target;
+                size_t _pos;
+                void update_target() {
+                    _target = tuple_r_at_index(*_data, _pos);
+                }
+        };
+        iterator begin() {
+            return iterator(_data, 0); 
+        }
+        iterator end() {
+            return iterator(_data, _size + 1);
+        }
 };
 
 }

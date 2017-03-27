@@ -103,6 +103,18 @@ TEST_F(UnpackTest, IteratorEndCorrect) {
     ASSERT_TRUE(it0 == it1);
 }
 
+TEST_F(UnpackTest, IteratorDistanceCorrect) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v0.push_back(_e2);
+    auto it0 = _v0.begin();
+    auto it1 = _v0.begin();
+    ASSERT_EQ(std::distance(it0, it1), 0);
+    it1++;
+    it1++;
+    ASSERT_EQ(std::distance(it0, it1), 2);
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

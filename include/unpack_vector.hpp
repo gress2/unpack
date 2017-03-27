@@ -62,6 +62,11 @@ class vector<unpack<T>> {
 
         class iterator {
             public:
+                using difference_type = std::ptrdiff_t;
+                using value_type = ref_type;
+                using pointer = ref_type*;
+                using reference = ref_type&;  
+                using iterator_category = std::bidirectional_iterator_tag;
                 iterator(data_type* d, size_t pos)
                     : _data(d), 
                       _pos(pos), 
@@ -91,6 +96,10 @@ class vector<unpack<T>> {
                 }
                 bool operator!=(const iterator& rhs) {
                     return !((rhs._data == _data) && (rhs._pos == _pos));                    
+                }
+                template <typename DistType>
+                friend DistType distance(const iterator& begin, const iterator& end) {
+                   return end._pos - begin._pos; 
                 }
             private:
                 data_type* _data;

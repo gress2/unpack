@@ -18,7 +18,8 @@ template <typename T>
 class vector<unpack<T>> {
     private:
         using data_type = typename unpack_inversion<T>::type;
-        using ref_type = typename unpack_ref_type<T>::type;
+        using tuple_refs_type = typename unpack_tuple_refs_type<T>::type;
+        using tuple_vec_iter_type = typename unpack_tuple_vec_iter_type<T>::type;
         data_type* _data;
         size_t _size, _capacity;
         void double_capacity() {
@@ -52,7 +53,7 @@ class vector<unpack<T>> {
             _size++;
         }
 
-        ref_type operator[](size_t index) {
+        tuple_refs_type operator[](size_t index) {
             return tuple_r_at_index(*_data, index); 
         }
 
@@ -63,58 +64,45 @@ class vector<unpack<T>> {
         class iterator {
             public:
                 using difference_type = std::ptrdiff_t;
-                using value_type = ref_type;
-                using pointer = ref_type*;
-                using reference = ref_type&;  
+                using value_type = T; 
+                using pointer = tuple_refs_type*;
+                using reference = tuple_refs_type;
                 using iterator_category = std::bidirectional_iterator_tag;
-                iterator(data_type* d, size_t pos)
-                    : _data(d), 
-                      _pos(pos), 
-                      _target(tuple_r_at_index(*d, pos)),
-                      _ptr(&_target) 
+                template <typename Func>
+                iterator(data_type* d, Func&& f)
+                    : _data(make_tuple_vec_iter(*d, std::forward<Func>(f))) 
                 {
                 }
                 iterator& operator++() {
-                    _pos++;
+                    tuple_for_each(_data, [](auto& iter) { iter++; }); 
                     return *this;     
                 }
                 iterator operator++(int) {
                     vector<unpack<T>>::iterator it = *this;
-                    _pos++;
+                    tuple_for_each(_data, [](auto& iter) { iter++; }); 
                     return it;    
                 } 
-                ref_type* operator->() {
-                    update_target();
-                    return _ptr;
-                }
-                ref_type& operator*() {
-                    update_target(); 
-                    return *_ptr;
+                tuple_refs_type operator*() {
+                    return make_tuple_refs(_data); 
                 }
                 bool operator==(const iterator& rhs) {
-                    return ((rhs._data == _data) && (rhs._pos == _pos));                    
+                    return rhs._data == _data;
                 }
                 bool operator!=(const iterator& rhs) {
-                    return !((rhs._data == _data) && (rhs._pos == _pos));                    
+                    return rhs._data != _data;       
                 }
                 template <typename DistType>
                 friend DistType distance(const iterator& begin, const iterator& end) {
-                   return end._pos - begin._pos; 
+                   return std::distance(std::get<0>(end), std::get<0>(begin));
                 }
             private:
-                data_type* _data;
-                ref_type* _ptr;
-                ref_type _target;
-                size_t _pos;
-                void update_target() {
-                    _target = tuple_r_at_index(*_data, _pos);
-                }
+                tuple_vec_iter_type _data;
         };
         iterator begin() {
-            return iterator(_data, 0); 
+            return iterator(_data, [](auto& iter) { return iter.begin(); }); 
         }
         iterator end() {
-            return iterator(_data, _size + 1);
+            return iterator(_data, [](auto& iter) { return iter.end(); });
         }
 };
 

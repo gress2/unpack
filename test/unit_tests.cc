@@ -28,12 +28,52 @@ TEST_F(UnpackTest, SizeIncreasesOnPushBack) {
     ASSERT_EQ(_v0.size(), 2); 
 }
 
+TEST_F(UnpackTest, CapacityIsSane) {
+    for (int i = 0; i < 1000; i++) {
+        _v0.push_back(_e0);
+    }
+    ASSERT_GE(_v0.capacity(), 1000);
+}
+
+TEST_F(UnpackTest, MaxSizeIsSane) {
+    ASSERT_GT(_v0.max_size(), 0);
+}
+
+TEST_F(UnpackTest, ResizeIncreasesElementsCorrectly) {
+    _v0.resize(1000);
+    ASSERT_EQ(_v0.size(), 1000);
+}
+
+TEST_F(UnpackTest, ResizeReducesElementsCorrectly) {
+    for (int i = 0; i < 1000; i++) {
+        _v0.push_back(_e0);
+    }
+    _v0.resize(500);
+    ASSERT_EQ(_v0.size(), 500);
+}
+
 TEST_F(UnpackTest, BracketOperatorReturnsCorrectTuple) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
     ASSERT_EQ(std::get<0>(_v0[1]), 123);
     ASSERT_TRUE(std::is_reference
             <decltype(std::get<1>(_v0[0]))>::value);
+}
+
+TEST_F(UnpackTest, CopyConstructorCorrect) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    vector<unpack<tuple<int, double>>> _v1(_v0); 
+    ASSERT_EQ(std::get<0>(_v0[0]), std::get<0>(_v1[0]));
+    ASSERT_EQ(_v0.size(), _v1.size());
+}
+
+TEST_F(UnpackTest, MoveConstructorCorrect) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    vector<unpack<tuple<int, double>>> _v1(std::move(_v0));
+    ASSERT_EQ(3, std::get<0>(_v1[0]));
+    ASSERT_EQ(2, _v1.size());
 }
 
 TEST_F(UnpackTest, IteratorBeginCorrect) {

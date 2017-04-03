@@ -1,4 +1,4 @@
-#include <vector>
+#include <vector> 
 #include <iostream>
 #include "is_stl_container.hpp"
 #include "unpack_type_utils.hpp"
@@ -47,12 +47,35 @@ class vector<unpack<T>> {
             });
         }
         
+        void pop_back() {
+            tuple_for_each(_data, [](auto& cur_vect) {
+                cur_vect.pop_back();
+            });
+        }
+
         void resize(size_t size) {
             tuple_for_each(_data, [size](auto& cur_vect) { cur_vect.resize(size); });
         }
 
         tuple_refs_type operator[](size_t index) {
             return tuple_r_at_index(_data, index); 
+        }
+
+        tuple_refs_type at(size_t index) {
+            if (index >= this->size()) {
+                std::string error = "vector::at: __n (which is " + std::to_string(index) + 
+                    ") >= this->size() (which is " + std::to_string(this->size()) + ")";
+                throw std::out_of_range(error);
+            }
+            return tuple_r_at_index(_data, index);
+        }
+
+        tuple_refs_type front() {
+            return operator[](0);
+        }
+        
+        tuple_refs_type back() {
+            return operator[](size() - 1);
         }
 
         ~vector() {}

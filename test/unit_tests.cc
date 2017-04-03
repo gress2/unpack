@@ -28,6 +28,15 @@ TEST_F(UnpackTest, SizeIncreasesOnPushBack) {
     ASSERT_EQ(_v0.size(), 2); 
 }
 
+TEST_F(UnpackTest, PopBackRemovesLastElement) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v0.push_back(_e2);
+    _v0.pop_back();
+    ASSERT_EQ(_v0.size(), 2);
+    ASSERT_EQ(std::get<0>(_v0[1]), 123);
+}
+
 TEST_F(UnpackTest, CapacityIsSane) {
     for (int i = 0; i < 1000; i++) {
         _v0.push_back(_e0);
@@ -58,6 +67,38 @@ TEST_F(UnpackTest, BracketOperatorReturnsCorrectTuple) {
     ASSERT_EQ(std::get<0>(_v0[1]), 123);
     ASSERT_TRUE(std::is_reference
             <decltype(std::get<1>(_v0[0]))>::value);
+}
+
+TEST_F(UnpackTest, AtAccessorCorrect) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    ASSERT_EQ(std::get<0>(_v0.at(1)), 123);
+    ASSERT_TRUE(std::is_reference
+            <decltype(std::get<1>(_v0.at(0)))>::value);
+}
+
+TEST_F(UnpackTest, AtAccessorThrowsExceptionWhenOutOfBounds) {
+    _v0.push_back(_e0);
+    try {
+        _v0.at(100);
+        FAIL();
+    } catch (const std::out_of_range& expected) {
+        // should be thrown/caught
+    }
+}
+
+TEST_F(UnpackTest, FrontAccessorReturnsFirstElement) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v0.push_back(_e2);
+    ASSERT_EQ(std::get<0>(_v0.front()), 3);
+}
+
+TEST_F(UnpackTest, BackAccessorReturnsLastElement) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v0.push_back(_e2);
+    ASSERT_EQ(std::get<0>(_v0.back()), 74);
 }
 
 TEST_F(UnpackTest, CopyConstructorCorrect) {
@@ -104,6 +145,28 @@ TEST_F(UnpackTest, IteratorPostfixIncrCorrect) {
     ASSERT_EQ(std::get<0>(*(it++)), 3); 
 }
 
+TEST_F(UnpackTest, IteratorDecrementCorrect) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    auto it = _v0.end();
+    it--;
+    ASSERT_EQ(std::get<0>(*it), 123);
+}
+
+TEST_F(UnpackTest, IteratorPrefixDecrCorrect) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    auto it = _v0.end();
+    ASSERT_EQ(std::get<0>(*(--it)), 123); 
+}
+
+TEST_F(UnpackTest, IteratorPostfixDecrCorrect) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    auto it = _v0.end();
+    it--;
+    ASSERT_EQ(std::get<0>(*(it--)), 123); 
+}
 TEST_F(UnpackTest, IteratorEqualityCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);

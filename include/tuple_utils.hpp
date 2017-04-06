@@ -55,8 +55,20 @@ auto make_tuple_refs_helper(DataType&& data, std::index_sequence<Indices ... >) 
     return std::tie(*std::get<Indices>(std::forward<DataType>(data)) ... );
 }
 
+
 template <typename DataType>
 auto make_tuple_refs(DataType&& data) {
     constexpr std::size_t N = std::tuple_size<std::remove_reference_t<DataType>>::value;
     return make_tuple_refs_helper(std::forward<DataType>(data), std::make_index_sequence<N>{});
+}
+
+template <typename DataType, std::size_t ... Indices>
+auto make_tuple_const_refs_helper(DataType&& data, std::index_sequence<Indices ... >) {
+    return std::tie(as_const(*std::get<Indices>(std::forward<DataType>(data))) ... );
+}
+
+template <typename DataType>
+auto make_tuple_const_refs(DataType&& data) {
+    constexpr std::size_t N = std::tuple_size<std::remove_reference_t<DataType>>::value;
+    return make_tuple_const_refs_helper(std::forward<DataType>(data), std::make_index_sequence<N>{});
 }

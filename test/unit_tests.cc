@@ -190,6 +190,10 @@ TEST_F(UnpackTest, IteratorBeginCorrect) {
     ASSERT_EQ(*it, _e0);
 }
 
+TEST_F(UnpackTest, ConstIteratorBeginCorrect) {
+    _v0.push_back(_e0);
+}
+
 TEST_F(UnpackTest, IteratorPrefixIncrCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);

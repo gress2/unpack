@@ -34,6 +34,22 @@ struct unpack_tuple_refs_type {
 };
 
 template <typename T, typename Indices>
+struct tuple_const_refs_type_helper;
+
+template <typename T, size_t ... Indices>
+struct tuple_const_refs_type_helper<T, std::index_sequence<Indices ...>> {
+    using type = std::tuple<
+                    const typename std::tuple_element<Indices, T>::type& ...
+                 >;
+};
+
+template <typename T>
+struct unpack_tuple_const_refs_type {
+    using Indices = std::make_index_sequence<std::tuple_size<T>::value>;
+    using type = typename tuple_refs_type_helper<T, Indices>::type;
+};
+
+template <typename T, typename Indices>
 struct tuple_vec_iter_type_helper;
 
 template <typename T, size_t ... Indices>

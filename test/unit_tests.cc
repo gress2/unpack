@@ -13,9 +13,12 @@ class UnpackTest : public ::testing::Test {
             _e0 = tuple<int, double>(3, 5.0); 
             _e1 = tuple<int, double>(123, 92.2);
             _e2 = tuple<int, double>(74, 84.8);
+            _e3 = tuple<int, double>(8, 98.4);
+            _e4 = tuple<int, double>(56, 62.0);
         }
         vector<unpack<tuple<int, double>>> _v0;
-        tuple<int, double> _e0, _e1, _e2;
+        vector<unpack<tuple<int, double>>> _v1;
+        tuple<int, double> _e0, _e1, _e2, _e3, _e4;
 };
 
 TEST_F(UnpackTest, IsEmptyInitially) {
@@ -34,7 +37,35 @@ TEST_F(UnpackTest, PopBackRemovesLastElement) {
     _v0.push_back(_e2);
     _v0.pop_back();
     ASSERT_EQ(_v0.size(), 2);
-    ASSERT_EQ(std::get<0>(_v0[1]), 123);
+    ASSERT_EQ(_v0[1], _e1);
+}
+
+TEST_F(UnpackTest, SwapCorrectlySwapsElements) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v1.push_back(_e2);
+    _v1.push_back(_e3);
+    _v0.swap(_v1);
+    ASSERT_EQ(_v0[0], _e2);
+    ASSERT_EQ(_v0[1], _e3); 
+}
+
+TEST_F(UnpackTest, StdSwapCorrectlySwapsElements) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v1.push_back(_e2);
+    _v1.push_back(_e3);
+    std::swap(_v0, _v1);
+    ASSERT_EQ(_v0[0], _e2);
+    ASSERT_EQ(_v0[1], _e3);
+}
+
+TEST_F(UnpackTest, ClearRemovesAllElements) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v0.push_back(_e2);
+    _v0.clear();
+    ASSERT_EQ(_v0.size(), 0);
 }
 
 TEST_F(UnpackTest, CapacityIsSane) {
@@ -59,6 +90,20 @@ TEST_F(UnpackTest, ResizeReducesElementsCorrectly) {
     }
     _v0.resize(500);
     ASSERT_EQ(_v0.size(), 500);
+}
+
+TEST_F(UnpackTest, ReserveIncreasesCapacity) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e0);
+    size_t new_size = _v0.capacity() + 1000;
+    _v0.reserve(new_size);
+    ASSERT_EQ(_v0.capacity(), new_size);
+}
+
+TEST_F(UnpackTest, ShrinkToFitReducesCapacityWhenAble) {
+    _v0.reserve(1000);
+    _v0.shrink_to_fit();
+    ASSERT_EQ(_v0.capacity(), 0);
 }
 
 TEST_F(UnpackTest, BracketOperatorReturnsCorrectTuple) {
@@ -91,73 +136,79 @@ TEST_F(UnpackTest, FrontAccessorReturnsFirstElement) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
     _v0.push_back(_e2);
-    ASSERT_EQ(std::get<0>(_v0.front()), 3);
+    ASSERT_EQ(_v0.front(), _e0);
 }
 
 TEST_F(UnpackTest, BackAccessorReturnsLastElement) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
     _v0.push_back(_e2);
-    ASSERT_EQ(std::get<0>(_v0.back()), 74);
+    ASSERT_EQ(_v0.back(), _e2);
 }
 
 TEST_F(UnpackTest, CopyConstructorCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
-    vector<unpack<tuple<int, double>>> _v1(_v0); 
-    ASSERT_EQ(std::get<0>(_v0[0]), std::get<0>(_v1[0]));
-    ASSERT_EQ(_v0.size(), _v1.size());
+    vector<unpack<tuple<int, double>>> _v2(_v0); 
+    ASSERT_EQ(_v0[0], _v2[0]);
+    ASSERT_EQ(_v0.size(), _v2.size());
+}
+
+TEST_F(UnpackTest, AssignmentCorrectForLValRef) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v1 = _v0; 
+    ASSERT_EQ(_v1[0], _v0[0]);
+    ASSERT_EQ(_v1.size(), _v0.size());
+}
+
+TEST_F(UnpackTest, AssignmentCorrectForRValRef) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v1 = std::move(_v0); 
+    ASSERT_EQ(_v1[0], _e0);
+    ASSERT_EQ(_v1.size(), 2);
+}
+
+TEST_F(UnpackTest, AssignmentCorrectForIList) {
+    _v0 = { _e0, _e1, _e2, _e3 };
+    ASSERT_EQ(_v0[0], _e0);
+    ASSERT_EQ(_v0[2], _e2);
 }
 
 TEST_F(UnpackTest, MoveConstructorCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
-    vector<unpack<tuple<int, double>>> _v1(std::move(_v0));
-    ASSERT_EQ(3, std::get<0>(_v1[0]));
-    ASSERT_EQ(2, _v1.size());
+    vector<unpack<tuple<int, double>>> _v2(std::move(_v0));
+    ASSERT_EQ(_v2[0], _e0);
+    ASSERT_EQ(_v2.size(), 2);
 }
 
 TEST_F(UnpackTest, IteratorBeginCorrect) {
     _v0.push_back(_e0);
     auto it = _v0.begin(); 
-    ASSERT_EQ(std::get<0>(*it), 3);
-}
-
-TEST_F(UnpackTest, IteratorIncrementCorrect) {
-    _v0.push_back(_e0);
-    _v0.push_back(_e1);
-    auto it = _v0.begin();
-    it++;
-    ASSERT_EQ(std::get<0>(*it), 123);
+    ASSERT_EQ(*it, _e0);
 }
 
 TEST_F(UnpackTest, IteratorPrefixIncrCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
     auto it = _v0.begin();
-    ASSERT_EQ(std::get<0>(*(++it)), 123); 
+    ASSERT_EQ(*(++it), _e1); 
 }
 
 TEST_F(UnpackTest, IteratorPostfixIncrCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
     auto it = _v0.begin();
-    ASSERT_EQ(std::get<0>(*(it++)), 3); 
-}
-
-TEST_F(UnpackTest, IteratorDecrementCorrect) {
-    _v0.push_back(_e0);
-    _v0.push_back(_e1);
-    auto it = _v0.end();
-    it--;
-    ASSERT_EQ(std::get<0>(*it), 123);
+    ASSERT_EQ(*(it++), _e0); 
 }
 
 TEST_F(UnpackTest, IteratorPrefixDecrCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
     auto it = _v0.end();
-    ASSERT_EQ(std::get<0>(*(--it)), 123); 
+    ASSERT_EQ(*(--it), _e1); 
 }
 
 TEST_F(UnpackTest, IteratorPostfixDecrCorrect) {
@@ -165,8 +216,9 @@ TEST_F(UnpackTest, IteratorPostfixDecrCorrect) {
     _v0.push_back(_e1);
     auto it = _v0.end();
     it--;
-    ASSERT_EQ(std::get<0>(*(it--)), 123); 
+    ASSERT_EQ(*(it--), _e1); 
 }
+
 TEST_F(UnpackTest, IteratorEqualityCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);

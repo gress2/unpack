@@ -1,6 +1,5 @@
 #include <vector> 
 #include <iostream>
-#include "is_stl_container.hpp"
 #include "unpack_type_utils.hpp"
 #include "tuple_utils.hpp"
 
@@ -29,6 +28,28 @@ class vector<unpack<T>> {
             });
         }
 
+        vector<unpack<T>>& operator=(const vector<unpack<T>>& v) {
+            // TODO: is this ok? / reuse of code
+            tuple_for_each(v._data, _data, [](auto& _old, auto& _new) {
+                _new = _old;
+            }); 
+            return *this;
+        }
+
+        vector<unpack<T>>& operator=(vector<unpack<T>>&& v) {
+            tuple_for_each(v._data, _data, [](auto&& _old, auto& _new) {
+                _new = std::move(_old); 
+            });
+            return *this;
+        }
+
+        vector<unpack<T>>& operator=(std::initializer_list<T> ilist) {
+            for (auto& tuple : ilist) {
+                push_back(tuple); // TODO: can we make this faster somehow O(mn) 
+            }
+            return *this;
+        }
+
         size_t size() const {
             return std::get<0>(_data).size();
         }
@@ -47,14 +68,34 @@ class vector<unpack<T>> {
             });
         }
         
+        void reserve(size_t size) {
+            tuple_for_each(_data, [size](auto& cur_vect) {
+                cur_vect.reserve(size);
+            });
+        }
+
         void pop_back() {
             tuple_for_each(_data, [](auto& cur_vect) {
                 cur_vect.pop_back();
             });
         }
 
+        void clear() {
+            tuple_for_each(_data, [](auto& cur_vect) { cur_vect.clear(); });
+        }
+
+        void swap(vector<unpack<T>>& v) {
+            tuple_for_each(_data, v._data, [](auto& cur_vect, auto& target_cur_vect) {
+                cur_vect.swap(target_cur_vect);
+            });
+        }
+
         void resize(size_t size) {
             tuple_for_each(_data, [size](auto& cur_vect) { cur_vect.resize(size); });
+        }
+
+        void shrink_to_fit() {
+            tuple_for_each(_data, [](auto& cur_vect) { cur_vect.shrink_to_fit(); });
         }
 
         tuple_refs_type operator[](size_t index) {
@@ -143,6 +184,22 @@ class vector<unpack<T>> {
 
         iterator end() {
             return iterator(_data, [](auto& iter) { return iter.end(); });
+        }
+
+        class const_iterator {
+            public:
+                using difference_type = std::ptrdiff_t;
+                using value_type = T; 
+                using pointer = tuple_refs_type*; // TODO
+                using reference = tuple_refs_type;
+                using iterator_category = std::bidirectional_iterator_tag;
+            private:
+                
+        };
+        
+        template <typename V, typename Alloc>
+        friend void swap(vector<unpack<V, Alloc>>& lhs, vector<unpack<V, Alloc>>& rhs) {
+            lhs.swap(rhs);
         }
 };
 

@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <type_traits>
+#include <utility>
 #include "unpack.hpp"
 #include "gtest/gtest.h"
 
@@ -79,6 +80,12 @@ TEST_F(UnpackTest, MaxSizeIsSane) {
     ASSERT_GT(_v0.max_size(), 0);
 }
 
+TEST_F(UnpackTest, EmptyIsCorrect) {
+    ASSERT_TRUE(_v0.empty());
+    _v0.push_back(_e0);
+    ASSERT_FALSE(_v0.empty());
+}
+
 TEST_F(UnpackTest, ResizeIncreasesElementsCorrectly) {
     _v0.resize(1000);
     ASSERT_EQ(_v0.size(), 1000);
@@ -114,6 +121,13 @@ TEST_F(UnpackTest, BracketOperatorReturnsCorrectTuple) {
             <decltype(std::get<1>(_v0[0]))>::value);
 }
 
+TEST_F(UnpackTest, ConstBracketOperatorReturnsCorrectTuple) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    ASSERT_EQ(std::get<0>(cv[1]), 123);
+    ASSERT_TRUE(std::is_reference
+            <decltype(std::get<1>(cv[0]))>::value);
+}
+
 TEST_F(UnpackTest, AtAccessorCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
@@ -122,10 +136,27 @@ TEST_F(UnpackTest, AtAccessorCorrect) {
             <decltype(std::get<1>(_v0.at(0)))>::value);
 }
 
+TEST_F(UnpackTest, ConstAtAccessorCorrect) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    ASSERT_EQ(std::get<0>(cv.at(1)), 123);
+    ASSERT_TRUE(std::is_reference
+            <decltype(std::get<1>(cv.at(0)))>::value);
+}
+
 TEST_F(UnpackTest, AtAccessorThrowsExceptionWhenOutOfBounds) {
     _v0.push_back(_e0);
     try {
         _v0.at(100);
+        FAIL();
+    } catch (const std::out_of_range& expected) {
+        // should be thrown/caught
+    }
+}
+
+TEST_F(UnpackTest, ConstAtAccessorThrowsExceptionWhenOutOfBounds) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    try {
+        cv.at(100);
         FAIL();
     } catch (const std::out_of_range& expected) {
         // should be thrown/caught
@@ -139,11 +170,21 @@ TEST_F(UnpackTest, FrontAccessorReturnsFirstElement) {
     ASSERT_EQ(_v0.front(), _e0);
 }
 
+TEST_F(UnpackTest, ConstFrontAccessorReturnsFirstElement) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    ASSERT_EQ(cv.front(), _e0);
+}
+
 TEST_F(UnpackTest, BackAccessorReturnsLastElement) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
     _v0.push_back(_e2);
     ASSERT_EQ(_v0.back(), _e2);
+}
+
+TEST_F(UnpackTest, ConstBackAccessorReturnsFirstElement) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    ASSERT_EQ(cv.back(), _e2);
 }
 
 TEST_F(UnpackTest, CopyConstructorCorrect) {
@@ -191,7 +232,15 @@ TEST_F(UnpackTest, IteratorBeginCorrect) {
 }
 
 TEST_F(UnpackTest, ConstIteratorBeginCorrect) {
-    _v0.push_back(_e0);
+     const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+     auto it = cv.begin();
+     ASSERT_EQ(*it, _e0);
+}
+
+TEST_F(UnpackTest, ConstIteratorCbeginCorrect) {
+     const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+     auto it = cv.cbegin();
+     ASSERT_EQ(*it, _e0);
 }
 
 TEST_F(UnpackTest, IteratorPrefixIncrCorrect) {
@@ -201,6 +250,13 @@ TEST_F(UnpackTest, IteratorPrefixIncrCorrect) {
     ASSERT_EQ(*(++it), _e1); 
 }
 
+TEST_F(UnpackTest, ConstIteratorPrefixIncrCorrect) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    auto it = cv.begin();
+    ++it;
+    ASSERT_EQ(*(++it), _e2); 
+}
+
 TEST_F(UnpackTest, IteratorPostfixIncrCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
@@ -208,11 +264,24 @@ TEST_F(UnpackTest, IteratorPostfixIncrCorrect) {
     ASSERT_EQ(*(it++), _e0); 
 }
 
+TEST_F(UnpackTest, ConstIteratorPostfixIncrCorrect) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    auto it = cv.begin();
+    it++;
+    ASSERT_EQ(*(it++), _e1); 
+}
+
 TEST_F(UnpackTest, IteratorPrefixDecrCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
     auto it = _v0.end();
     ASSERT_EQ(*(--it), _e1); 
+}
+
+TEST_F(UnpackTest, ConstIteratorPrefixDecrCorrect) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    auto it = cv.end();
+    ASSERT_EQ(*(--it), _e2); 
 }
 
 TEST_F(UnpackTest, IteratorPostfixDecrCorrect) {
@@ -223,12 +292,31 @@ TEST_F(UnpackTest, IteratorPostfixDecrCorrect) {
     ASSERT_EQ(*(it--), _e1); 
 }
 
+TEST_F(UnpackTest, ConstIteratorPostfixDecrCorrect) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    auto it = cv.end();
+    it--;
+    ASSERT_EQ(*(it--), _e2); 
+}
+
 TEST_F(UnpackTest, IteratorEqualityCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
     _v0.push_back(_e2);
     auto it0 = _v0.begin();
     auto it1 = _v0.begin(); 
+    ASSERT_TRUE(it0 == it1);
+    it0++;
+    it1++;
+    ASSERT_TRUE(it0 == it1);
+    it1++;
+    ASSERT_FALSE(it0 == it1);
+}
+
+TEST_F(UnpackTest, ConstIteratorEqualityCorrect) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    auto it0 = cv.begin();
+    auto it1 = cv.begin(); 
     ASSERT_TRUE(it0 == it1);
     it0++;
     it1++;
@@ -251,6 +339,18 @@ TEST_F(UnpackTest, IteratorInequalityCorrect) {
     ASSERT_TRUE(it0 != it1);
 }
 
+TEST_F(UnpackTest, ConstIteratorInequalityCorrect) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    auto it0 = cv.begin();
+    auto it1 = cv.begin(); 
+    ASSERT_FALSE(it0 != it1);
+    it0++;
+    it1++;
+    ASSERT_FALSE(it0 != it1);
+    it1++;
+    ASSERT_TRUE(it0 != it1);
+}
+
 TEST_F(UnpackTest, IteratorEndCorrect) {
     _v0.push_back(_e0);
     _v0.push_back(_e1);
@@ -259,6 +359,24 @@ TEST_F(UnpackTest, IteratorEndCorrect) {
     auto it1 = _v0.end();
     ASSERT_FALSE(it0 == it1);
     it0 = _v0.end();
+    ASSERT_TRUE(it0 == it1);
+}
+
+TEST_F(UnpackTest, ConstIteratorEndCorrect) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    auto it0 = cv.begin();
+    auto it1 = cv.end();
+    ASSERT_FALSE(it0 == it1);
+    it0 = cv.end();
+    ASSERT_TRUE(it0 == it1);
+}
+
+TEST_F(UnpackTest, ConstIteratorCendCorrect) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    auto it0 = cv.begin();
+    auto it1 = cv.cend();
+    ASSERT_FALSE(it0 == it1);
+    it0 = cv.cend();
     ASSERT_TRUE(it0 == it1);
 }
 
@@ -272,6 +390,28 @@ TEST_F(UnpackTest, IteratorDistanceCorrect) {
     it1++;
     it1++;
     ASSERT_EQ(std::distance(it0, it1), 2);
+}
+
+TEST_F(UnpackTest, ConstIteratorDistanceCorrect) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
+    auto it0 = cv.begin();
+    auto it1 = cv.begin();
+    ASSERT_EQ(std::distance(it0, it1), 0);
+    it1++;
+    it1++;
+    ASSERT_EQ(std::distance(it0, it1), 2);
+}
+
+TEST_F(UnpackTest, IteratedTuplesMutable) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v0.push_back(_e2);
+    auto it = _v0.begin();
+    *it = _e2;
+    ASSERT_EQ(*it, _e2);
+    *(++it) = _e0;
+    ASSERT_EQ(*it, _e0);
+    ASSERT_EQ(*(_v0.begin()), _e2);
 }
 
 int main(int argc, char **argv) {

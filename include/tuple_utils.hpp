@@ -50,11 +50,22 @@ auto make_tuple_vec_iter(DataType&& data, Func&& f) {
             std::forward<Func>(f), std::make_index_sequence<N>{});
 } 
 
+template <typename DataType, typename Func, std::size_t ... Indices>
+auto make_tuple_vec_const_iter_helper(DataType&& data, Func&& f, std::index_sequence<Indices ...>) {
+    return std::make_tuple(f(std::get<Indices>(std::forward<DataType>(data))) ... );
+} 
+
+template <typename DataType, typename Func>
+auto make_tuple_vec_const_iter(DataType&& data, Func&& f) {
+    constexpr std::size_t N = std::tuple_size<std::remove_reference_t<DataType>>::value;
+    return make_tuple_vec_const_iter_helper(std::forward<DataType>(data), 
+            std::forward<Func>(f), std::make_index_sequence<N>{});
+} 
+
 template <typename DataType, std::size_t ... Indices>
 auto make_tuple_refs_helper(DataType&& data, std::index_sequence<Indices ... >) {
     return std::tie(*std::get<Indices>(std::forward<DataType>(data)) ... );
 }
-
 
 template <typename DataType>
 auto make_tuple_refs(DataType&& data) {
@@ -62,13 +73,3 @@ auto make_tuple_refs(DataType&& data) {
     return make_tuple_refs_helper(std::forward<DataType>(data), std::make_index_sequence<N>{});
 }
 
-template <typename DataType, std::size_t ... Indices>
-auto make_tuple_const_refs_helper(DataType&& data, std::index_sequence<Indices ... >) {
-    return std::tie(as_const(*std::get<Indices>(std::forward<DataType>(data))) ... );
-}
-
-template <typename DataType>
-auto make_tuple_const_refs(DataType&& data) {
-    constexpr std::size_t N = std::tuple_size<std::remove_reference_t<DataType>>::value;
-    return make_tuple_const_refs_helper(std::forward<DataType>(data), std::make_index_sequence<N>{});
-}

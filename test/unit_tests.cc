@@ -56,7 +56,8 @@ TEST_F(UnpackTest, StdSwapCorrectlySwapsElements) {
     _v0.push_back(_e1);
     _v1.push_back(_e2);
     _v1.push_back(_e3);
-    std::swap(_v0, _v1);
+    using std::swap;
+    swap(_v0, _v1);
     ASSERT_EQ(_v0[0], _e2);
     ASSERT_EQ(_v0[1], _e3);
 }
@@ -67,6 +68,56 @@ TEST_F(UnpackTest, ClearRemovesAllElements) {
     _v0.push_back(_e2);
     _v0.clear();
     ASSERT_EQ(_v0.size(), 0);
+}
+
+TEST_F(UnpackTest, InsertPlacesTupleInVectorAndReturnsIter) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v0.push_back(_e2);
+    auto it = _v0.cbegin();
+    it++;
+    auto pos = _v0.insert(it, _e3);
+    ASSERT_EQ(*pos, _e3);
+    ASSERT_EQ(*(--pos), _e0);
+    pos++;
+    ASSERT_EQ(*(++pos), _e1);
+    pos = _v0.insert(it, _e4);
+    ASSERT_EQ(*pos, _e4);
+    ASSERT_EQ(_v0.size(), 5);
+}
+
+TEST_F(UnpackTest, RValInsertPlacesTupleInVectorAndReturnsIter) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v0.push_back(_e2);
+    auto it = _v0.cbegin();
+    it++;
+    auto pos = _v0.insert(it, tuple<int, double>(8, 98.4));
+    ASSERT_EQ(*pos, _e3);
+    ASSERT_EQ(*(--pos), _e0);
+    pos++;
+    ASSERT_EQ(*(++pos), _e1);
+    ASSERT_EQ(_v0.size(), 4);
+    it = _v0.cend();
+    it--;
+    pos = _v0.insert(it, tuple<int, double>(7, 2));
+    ASSERT_EQ(*pos, (tuple<int, double>(7, 2)));
+    ASSERT_EQ(_v0.size(), 5);
+}
+
+TEST_F(UnpackTest, InsertCountCorrect) {
+    _v0.push_back(_e0);
+    _v0.push_back(_e1);
+    _v0.push_back(_e2);
+    auto it = _v0.cbegin();
+    it++;
+    auto pos = _v0.insert(it, 3, _e3);
+    for (int i = 0; i < 3; i++) {
+        std::cout << "stuck" << std::endl;
+        ASSERT_EQ(*(pos++), _e3);
+    }
+    ASSERT_EQ(*pos, _e1);
+    ASSERT_EQ(_v0.size(), 6);
 }
 
 TEST_F(UnpackTest, CapacityIsSane) {
@@ -386,20 +437,22 @@ TEST_F(UnpackTest, IteratorDistanceCorrect) {
     _v0.push_back(_e2);
     auto it0 = _v0.begin();
     auto it1 = _v0.begin();
-    ASSERT_EQ(std::distance(it0, it1), 0);
+    using std::distance;
+    ASSERT_EQ(distance(it0, it1), 0);
     it1++;
     it1++;
-    ASSERT_EQ(std::distance(it0, it1), 2);
+    ASSERT_EQ(distance(it0, it1), 2);
 }
 
 TEST_F(UnpackTest, ConstIteratorDistanceCorrect) {
     const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
     auto it0 = cv.begin();
     auto it1 = cv.begin();
-    ASSERT_EQ(std::distance(it0, it1), 0);
+    using std::distance;
+    ASSERT_EQ(distance(it0, it1), 0);
     it1++;
     it1++;
-    ASSERT_EQ(std::distance(it0, it1), 2);
+    ASSERT_EQ(distance(it0, it1), 2);
 }
 
 TEST_F(UnpackTest, IteratedTuplesMutable) {

@@ -25,6 +25,14 @@ class vector<unpack<T>> {
         }
 
     public:
+        using value_type = T;
+        using size_type = size_t;
+        using difference_type = ptrdiff_t;
+        using reference = value_type&;
+        using const_reference = const value_type&;
+        class iterator;
+        class const_iterator;
+
         vector<unpack<T>>() {}
 
         vector<unpack<T>>(const vector<unpack<T>>& v) {
@@ -105,6 +113,37 @@ class vector<unpack<T>> {
 
         void clear() {
             tuple_for_each(_data, [](auto& cur_vect) { cur_vect.clear(); });
+        }
+
+        // TODO: can we make this better?
+        iterator insert(const_iterator pos, const T& value ) {
+            tuple_for_each(_data, pos._data, value, [](auto& cur_vect, auto& cur_iter, auto& tuple_element) {
+                cur_vect.insert(cur_iter, tuple_element);
+            });
+            iterator it = begin();
+            std::advance(it, distance(cbegin(), pos));
+            return it;
+        }
+
+        iterator insert(const_iterator pos, T&& value ) {
+            tuple_for_each(_data, pos._data, std::forward<T>(value), 
+                            [](auto& cur_vect, auto& cur_iter, auto&& tuple_element) {
+                cur_vect.insert(cur_iter, std::forward<decltype(tuple_element)>(tuple_element));
+            });
+            iterator it = begin();
+            std::advance(it, distance(cbegin(), pos));
+            return it;
+        }
+
+        iterator insert(const_iterator pos, size_type count, const T& value ) {
+            tuple_for_each(_data, pos._data, value, [count](auto& cur_vect, auto& cur_iter, auto& tuple_element) {
+                std::cout << "insert?" << std::endl;
+                std::cout << tuple_element << std::endl;
+                cur_vect.insert(cur_iter, count, tuple_element);
+            });
+            iterator it = begin();
+            std::advance(it, distance(cbegin(), pos));
+            return it;
         }
 
         void swap(vector<unpack<T>>& v) {
@@ -205,12 +244,12 @@ class vector<unpack<T>> {
                     return rhs._data != _data;       
                 }
 
-                template <typename DistType>
-                friend DistType distance(const iterator& begin, const iterator& end) {
-                   return std::distance(std::get<0>(end), std::get<0>(begin));
+                friend ptrdiff_t distance(const iterator& begin, const iterator& end) {
+                    return std::distance(std::get<0>(begin._data), std::get<0>(end._data));
                 }
 
-            private:
+            protected:
+                friend vector<unpack<T>>;
                 tuple_vec_iter_type _data;
         };
 
@@ -237,7 +276,7 @@ class vector<unpack<T>> {
                 }
 
                 const_iterator& operator++() {
-                    tuple_for_each(_data, [](auto& iter) { iter++; }); 
+                    tuple_for_each(_data, [](auto& iter) { iter++; });
                     return *this;     
                 }
 
@@ -270,12 +309,12 @@ class vector<unpack<T>> {
                     return rhs._data != _data;       
                 }
 
-                template <typename DistType>
-                friend DistType distance(const iterator& begin, const iterator& end) {
-                   return std::distance(std::get<0>(end), std::get<0>(begin));
+                friend ptrdiff_t distance(const const_iterator& begin, const const_iterator& end) {
+                    return std::distance(std::get<0>(begin._data), std::get<0>(end._data));
                 }
 
-                private:
+                protected:
+                    friend class vector<unpack<T>>;
                     tuple_vec_const_iter_type _data; 
         };
     
@@ -296,8 +335,7 @@ class vector<unpack<T>> {
             return end();
         }
 
-        template <typename V, typename Alloc>
-        friend void swap(vector<unpack<V, Alloc>>& lhs, vector<unpack<V, Alloc>>& rhs) {
+        friend void swap(vector<unpack<T>>& lhs, vector<unpack<T>>& rhs) {
             lhs.swap(rhs);
         }
 };

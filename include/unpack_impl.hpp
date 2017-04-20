@@ -1,2 +1,2 @@
-template <typename... T>
-class unpack {};
+template <typename ... T>
+class unpack{};

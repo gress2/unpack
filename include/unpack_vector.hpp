@@ -35,15 +35,15 @@ class vector<unpack<T>> {
         vector<unpack<T>>() {}
 
         vector<unpack<T>>(const vector<unpack<T>>& v) {
-            tuple_for_each(v._data, _data, [](auto& _old, auto& _new) {
+            tuple_for_each([](auto& _old, auto& _new) {
                 _new = _old;
-            });
+            }, v._data, _data);
         }
 
         vector<unpack<T>>(vector<unpack<T>>&& v) {
-            tuple_for_each(v._data, _data, [](auto&& _old, auto& _new) {
+            tuple_for_each([](auto&& _old, auto& _new) {
                 _new = std::move(_old); 
-            });
+            }, v._data, _data);
         }
 
         vector<unpack<T>> 
@@ -53,23 +53,23 @@ class vector<unpack<T>> {
             }  
         }
 
-        // TODO: clear?
         vector<unpack<T>>& operator=(const vector<unpack<T>>& v) {
             // TODO: is this ok? / reuse of code
-            tuple_for_each(v._data, _data, [](auto& _old, auto& _new) {
+            tuple_for_each([](auto& _old, auto& _new) {
                 _new = _old;
-            }); 
+            }, v._data, _data); 
             return *this;
         }
 
         vector<unpack<T>>& operator=(vector<unpack<T>>&& v) {
-            tuple_for_each(v._data, _data, [](auto&& _old, auto& _new) {
+            tuple_for_each([](auto&& _old, auto& _new) {
                 _new = std::move(_old); 
-            });
+            }, v._data, _data);
             return *this;
         }
 
         vector<unpack<T>>& operator=(std::initializer_list<T> ilist) {
+            clear();
             for (auto& tuple : ilist) {
                 push_back(tuple); 
             }
@@ -93,32 +93,31 @@ class vector<unpack<T>> {
         }
 
         void push_back(const T& elem) {
-            tuple_for_each(elem, _data, [](auto& new_elem, auto& cur_vect) {
+            tuple_for_each([](auto& new_elem, auto& cur_vect) {
                 cur_vect.push_back(new_elem);
-            });
+            }, elem, _data);
         }
         
         void reserve(size_t size) {
-            tuple_for_each(_data, [size](auto& cur_vect) {
+            tuple_for_each([size](auto& cur_vect) {
                 cur_vect.reserve(size);
-            });
+            }, _data);
         }
 
         void pop_back() {
-            tuple_for_each(_data, [](auto& cur_vect) {
+            tuple_for_each([](auto& cur_vect) {
                 cur_vect.pop_back();
-            });
+            }, _data);
         }
 
         void clear() {
-            tuple_for_each(_data, [](auto& cur_vect) { cur_vect.clear(); });
+            tuple_for_each([](auto& cur_vect) { cur_vect.clear(); }, _data);
         }
 
         iterator insert(const_iterator pos, const T& value) {
-            tuple_for_each(_data, pos.__data, value,
-                [](auto& data_vect, auto& vect_iter, auto& tuple_element) {
+            tuple_for_each([](auto& data_vect, auto& vect_iter, auto& tuple_element) {
                 vect_iter = data_vect.insert(vect_iter, tuple_element);
-            });
+            }, _data, pos.__data, value);
 
             iterator it = begin();
             std::advance(it, std::distance(cbegin(), pos)); 
@@ -126,36 +125,45 @@ class vector<unpack<T>> {
         }
        
         iterator insert(const_iterator pos, T&& value ) {
-            tuple_for_each(_data, pos.__data, std::forward<T>(value), 
-                            [](auto& cur_vect, auto& cur_iter, auto&& tuple_element) {
+            tuple_for_each([](auto& cur_vect, auto& cur_iter, auto&& tuple_element) {
                 cur_iter = cur_vect.insert(cur_iter, std::forward<decltype(tuple_element)>(tuple_element));
-            });
+            }, _data, pos.__data, std::forward<T>(value));
             iterator it = begin();
             std::advance(it, std::distance(cbegin(), pos));
             return it;
         }
 
         iterator insert(const_iterator pos, size_type count, const T& value ) {
-            tuple_for_each(_data, pos.__data, value, [count](auto& cur_vect, auto& cur_iter, auto& tuple_element) {
+            tuple_for_each([count](auto& cur_vect, auto& cur_iter, auto& tuple_element) {
                 cur_iter = cur_vect.insert(cur_iter, count, tuple_element);
-            });
+            }, _data, pos.__data, value);
             iterator it = begin();
             std::advance(it, std::distance(cbegin(), pos));
             return it;
         }
 
+        template <typename InputIt>
+        iterator insert(const_iterator pos, InputIt first, InputIt last) {
+            tuple_for_each([](auto& cur_vect, auto& cur_iter, auto& first_iter, auto& last_iter) {
+                cur_iter = cur_vect.insert(cur_iter, first_iter, last_iter);
+            }, _data, pos.__data, first.__data, last.__data); 
+            iterator it = begin();
+            std::advance(it, std::distance(cbegin(), pos));
+            return begin();
+        }
+
         void swap(vector<unpack<T>>& v) {
-            tuple_for_each(_data, v._data, [](auto& cur_vect, auto& target_cur_vect) {
+            tuple_for_each([](auto& cur_vect, auto& target_cur_vect) {
                 cur_vect.swap(target_cur_vect);
-            });
+            }, _data, v._data);
         }
 
         void resize(size_t size) {
-            tuple_for_each(_data, [size](auto& cur_vect) { cur_vect.resize(size); });
+            tuple_for_each([size](auto& cur_vect) { cur_vect.resize(size); }, _data);
         }
 
         void shrink_to_fit() {
-            tuple_for_each(_data, [](auto& cur_vect) { cur_vect.shrink_to_fit(); });
+            tuple_for_each([](auto& cur_vect) { cur_vect.shrink_to_fit(); }, _data);
         }
 
         tuple_refs_type operator[](size_t index) {
@@ -209,24 +217,24 @@ class vector<unpack<T>> {
                 }
 
                 iterator& operator++() {
-                    tuple_for_each(__data, [](auto& iter) { iter++; }); 
+                    tuple_for_each([](auto& iter) { iter++; }, __data); 
                     return *this;     
                 }
 
                 iterator operator++(int) {
                     vector<unpack<T>>::iterator it = *this;
-                    tuple_for_each(__data, [](auto& iter) { iter++; }); 
+                    tuple_for_each([](auto& iter) { iter++; }, __data); 
                     return it;    
                 } 
                 
                 iterator& operator--() {
-                    tuple_for_each(__data, [](auto& iter) { iter--; }); 
+                    tuple_for_each([](auto& iter) { iter--; }, __data); 
                     return *this;     
                 }
 
                 iterator operator--(int) {
                     vector<unpack<T>>::iterator it = *this;
-                    tuple_for_each(__data, [](auto& iter) { iter--; }); 
+                    tuple_for_each([](auto& iter) { iter--; }, __data); 
                     return it;    
                 }
 
@@ -274,24 +282,24 @@ class vector<unpack<T>> {
                 }
 
                 const_iterator& operator++() {
-                    tuple_for_each(__data, [](auto& iter) { iter++; });
+                    tuple_for_each([](auto& iter) { iter++; }, __data);
                     return *this;     
                 }
 
                 const_iterator operator++(int) {
                     vector<unpack<T>>::const_iterator it = *this;
-                    tuple_for_each(__data, [](auto& iter) { iter++; }); 
+                    tuple_for_each([](auto& iter) { iter++; }, __data); 
                     return it;    
                 } 
                 
                 const_iterator& operator--() {
-                    tuple_for_each(__data, [](auto& iter) { iter--; }); 
+                    tuple_for_each([](auto& iter) { iter--; }, __data); 
                     return *this;     
                 }
 
                 const_iterator operator--(int) {
                     vector<unpack<T>>::const_iterator it = *this;
-                    tuple_for_each(__data, [](auto& iter) { iter--; }); 
+                    tuple_for_each([](auto& iter) { iter--; }, __data); 
                     return it;    
                 }
 

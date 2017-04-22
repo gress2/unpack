@@ -471,6 +471,38 @@ TEST_F(UnpackTest, InsertCountCorrect) {
     ASSERT_EQ(_v0.size(), 6);
 }
 
+TEST_F(UnpackTest, InsertRangeCorrect) {
+    _v0 = { _e0, _e1, _e2, _e3 };
+    _v1 = { _e0, _e1 };
+
+    auto _v0_target = _v0.cbegin();
+    _v0_target++;
+
+    auto res_it = _v0.insert(_v0_target, _v1.begin(), _v1.end());
+    ASSERT_EQ(*res_it, *_v1.begin());
+    ASSERT_EQ(*(--res_it), _e0);
+    ASSERT_EQ((std::get<0>(*res_it)), 3);
+    ASSERT_EQ((std::get<1>(*res_it)), 5); 
+
+    _v0.clear();
+    _v1.clear();
+
+    _v0 = { _e0, _e1, _e2, _e3 };
+    _v1 = { _e0, _e1 };
+
+    auto _v1_target = _v1.cbegin();
+    _v1_target++;
+    auto _v0_start = ++(_v0.begin());
+    res_it = _v1.insert(_v1_target, _v0_start, _v0.end());
+    ASSERT_EQ(_v1.size(), 5);
+    res_it--;
+    ASSERT_EQ(*res_it, _e0);
+
+    // v1 = { _e0, _e1, _e2, _e3, _e1 }
+
+//    res_it--;
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

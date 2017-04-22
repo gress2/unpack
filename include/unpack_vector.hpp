@@ -149,7 +149,18 @@ class vector<unpack<T>> {
             }, _data, pos.__data, first.__data, last.__data); 
             iterator it = begin();
             std::advance(it, std::distance(cbegin(), pos));
-            return begin();
+            return it;
+        }
+
+        iterator insert(const_iterator pos, std::initializer_list<T> ilist) {
+            auto end = ilist.end(); 
+            iterator it = begin();
+            for (auto cur = ilist.end(); cur != ilist.begin(); ) {
+                cur--;
+                it = insert(pos, *cur);
+            }
+            
+            return it;
         }
 
         void swap(vector<unpack<T>>& v) {

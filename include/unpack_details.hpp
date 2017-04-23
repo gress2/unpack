@@ -1,3 +1,6 @@
+#ifndef UNPACK_VECTOR_DETAILS
+#define UNPACK_VECTOR_DETAILS
+
 #include <tuple>
 #include <vector>
 
@@ -128,6 +131,21 @@ auto make_tuple_refs(DataType&& data) {
     return make_tuple_refs_helper(std::forward<DataType>(data), std::make_index_sequence<N>{});
 }
 
+template <typename TupleItersType, typename Indices>
+struct remove_iter_type_helper;
+
+template <typename TupleItersType, std::size_t...Indices> 
+struct remove_iter_type_helper<TupleItersType, std::index_sequence<Indices...>>
+{
+    using type = std::tuple<typename std::tuple_element<Indices, TupleItersType>::type::value_type...>;
+};
+
+template <typename TupleItersType>
+struct remove_iter_type {
+    using Indices = std::make_index_sequence<std::tuple_size<TupleItersType>::value>;
+    using type = typename remove_iter_type_helper<TupleItersType, Indices>::type;
+};
+
 template <typename Func, std::size_t N, typename ... Tuples>
 void apply_to_tuples(Func&& f, Tuples&&... tuples) {
     f(std::get<N>(std::forward<Tuples>(tuples))...);
@@ -147,3 +165,5 @@ void tuple_for_each(Func&& f, Tuples&& ... tuples) {
     tuple_for_each_helper(std::forward<Func>(f), 
             std::make_index_sequence<N>{}, std::forward<Tuples>(tuples) ... );
 }
+
+#endif

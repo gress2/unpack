@@ -1,6 +1,10 @@
+#ifndef UNPACK_VECTOR
+#define UNPACK_VECTOR
+
 #include <vector> 
 #include <iostream>
-#include "unpack_vector_details.hpp"
+#include "unpack_iterator.hpp"
+#include "unpack_details.hpp"
 
 namespace std
 {
@@ -22,6 +26,8 @@ class vector<unpack<T>> {
                 throw std::out_of_range(error);
             }
         }
+        using iterator = unpack_iterator<tuple_vec_iter_type>;
+        using const_iterator = unpack_const_iterator<tuple_vec_const_iter_type>;
 
     public:
         using value_type = T;
@@ -29,8 +35,6 @@ class vector<unpack<T>> {
         using difference_type = ptrdiff_t;
         using reference = value_type&;
         using const_reference = const value_type&;
-        class iterator;
-        class const_iterator;
 
         vector<unpack<T>>() {}
 
@@ -117,7 +121,7 @@ class vector<unpack<T>> {
         iterator insert(const_iterator pos, const T& value) {
             tuple_for_each([](auto& data_vect, auto& vect_iter, auto& tuple_element) {
                 vect_iter = data_vect.insert(vect_iter, tuple_element);
-            }, _data, pos.__data, value);
+            }, _data, *(pos.data()), value);
 
             iterator it = begin();
             std::advance(it, std::distance(cbegin(), pos)); 
@@ -127,7 +131,7 @@ class vector<unpack<T>> {
         iterator insert(const_iterator pos, T&& value ) {
             tuple_for_each([](auto& cur_vect, auto& cur_iter, auto&& tuple_element) {
                 cur_iter = cur_vect.insert(cur_iter, std::forward<decltype(tuple_element)>(tuple_element));
-            }, _data, pos.__data, std::forward<T>(value));
+            }, _data, *(pos.data()), std::forward<T>(value));
             iterator it = begin();
             std::advance(it, std::distance(cbegin(), pos));
             return it;
@@ -136,7 +140,7 @@ class vector<unpack<T>> {
         iterator insert(const_iterator pos, size_type count, const T& value ) {
             tuple_for_each([count](auto& cur_vect, auto& cur_iter, auto& tuple_element) {
                 cur_iter = cur_vect.insert(cur_iter, count, tuple_element);
-            }, _data, pos.__data, value);
+            }, _data, *(pos.data()), value);
             iterator it = begin();
             std::advance(it, std::distance(cbegin(), pos));
             return it;
@@ -146,7 +150,7 @@ class vector<unpack<T>> {
         iterator insert(const_iterator pos, InputIt first, InputIt last) {
             tuple_for_each([](auto& cur_vect, auto& cur_iter, auto& first_iter, auto& last_iter) {
                 cur_iter = cur_vect.insert(cur_iter, first_iter, last_iter);
-            }, _data, pos.__data, first.__data, last.__data); 
+            }, _data, *(pos.data()), *(first.data()), *(last.data())); 
             iterator it = begin();
             std::advance(it, std::distance(cbegin(), pos));
             return it;
@@ -211,133 +215,16 @@ class vector<unpack<T>> {
             return operator[](size() - 1);
         }
 
-        ~vector() {}
-
-        class iterator {
-            public:
-                using difference_type = std::ptrdiff_t;
-                using value_type = T; 
-                using pointer = tuple_refs_type*; // TODO
-                using reference = tuple_refs_type;
-                using iterator_category = std::bidirectional_iterator_tag;
-
-                template <typename Func>
-                iterator(data_type& d, Func&& f)
-                    : __data(make_tuple_vec_iter(d, std::forward<Func>(f))) 
-                {
-                }
-
-                iterator& operator++() {
-                    tuple_for_each([](auto& iter) { iter++; }, __data); 
-                    return *this;     
-                }
-
-                iterator operator++(int) {
-                    vector<unpack<T>>::iterator it = *this;
-                    tuple_for_each([](auto& iter) { iter++; }, __data); 
-                    return it;    
-                } 
-                
-                iterator& operator--() {
-                    tuple_for_each([](auto& iter) { iter--; }, __data); 
-                    return *this;     
-                }
-
-                iterator operator--(int) {
-                    vector<unpack<T>>::iterator it = *this;
-                    tuple_for_each([](auto& iter) { iter--; }, __data); 
-                    return it;    
-                }
-
-                tuple_refs_type operator*() {
-                    return make_tuple_refs(__data); 
-                }
-
-                bool operator==(const iterator& rhs) {
-                    return rhs.__data == __data;
-                }
-
-                bool operator!=(const iterator& rhs) {
-                    return rhs.__data != __data;       
-                }
-
-                friend ptrdiff_t distance(const iterator& begin, const iterator& end) {
-                    return std::distance(std::get<0>(begin._data), std::get<0>(end._data));    
-                }
-
-            protected:
-                friend vector<unpack<T>>;
-                tuple_vec_iter_type __data;
-        };
-
         iterator begin() {
-            return iterator(_data, [](auto& iter) { return iter.begin(); }); 
+            return iterator(make_tuple_vec_iter(_data, [](auto& iter) { return iter.begin(); }));
         }
 
         iterator end() {
-            return iterator(_data, [](auto& iter) { return iter.end(); });
+            return iterator(make_tuple_vec_iter(_data, [](auto& iter) { return iter.end(); }));
         }
-
-        class const_iterator {
-            public:
-                using difference_type = std::ptrdiff_t;
-                using value_type = T; 
-                using pointer = tuple_const_refs_type; // TODO
-                using reference = tuple_const_refs_type;
-                using iterator_category = std::bidirectional_iterator_tag;
-
-                template <typename Func>
-                const_iterator(const data_type& d, Func&& f)
-                    : __data(make_tuple_vec_const_iter(d, std::forward<Func>(f))) 
-                {
-                }
-
-                const_iterator& operator++() {
-                    tuple_for_each([](auto& iter) { iter++; }, __data);
-                    return *this;     
-                }
-
-                const_iterator operator++(int) {
-                    vector<unpack<T>>::const_iterator it = *this;
-                    tuple_for_each([](auto& iter) { iter++; }, __data); 
-                    return it;    
-                } 
-                
-                const_iterator& operator--() {
-                    tuple_for_each([](auto& iter) { iter--; }, __data); 
-                    return *this;     
-                }
-
-                const_iterator operator--(int) {
-                    vector<unpack<T>>::const_iterator it = *this;
-                    tuple_for_each([](auto& iter) { iter--; }, __data); 
-                    return it;    
-                }
-
-                tuple_const_refs_type operator*() {
-                    return make_tuple_refs(__data); 
-                }
-  
-                bool operator==(const const_iterator& rhs) {
-                    return rhs.__data == __data;
-                }
-
-                bool operator!=(const const_iterator& rhs) {
-                    return rhs.__data != __data;       
-                }
-
-                friend ptrdiff_t distance(const const_iterator& begin, const const_iterator& end) {
-                    return std::distance(std::get<0>(begin._data), std::get<0>(end._data));     
-                }
-               
-                protected:
-                    friend class vector<unpack<T>>;
-                    tuple_vec_const_iter_type __data; 
-        };
-    
         
         const_iterator begin() const {
-            return const_iterator(_data, [](auto& iter) { return iter.begin(); }); 
+            return const_iterator(make_tuple_vec_const_iter(_data, [](auto& iter) { return iter.begin(); }));
         }
 
         const_iterator cbegin() const {
@@ -345,12 +232,14 @@ class vector<unpack<T>> {
         }
 
         const_iterator end() const {
-            return const_iterator(_data, [](auto& iter) { return iter.end(); });
+            return const_iterator(make_tuple_vec_const_iter(_data, [](auto& iter) { return iter.end(); }));
         }
 
         const_iterator cend() const {
             return end();
         }
+
+        ~vector() {}
 
         friend void swap(vector<unpack<T>>& lhs, vector<unpack<T>>& rhs) {
             lhs.swap(rhs);
@@ -358,3 +247,5 @@ class vector<unpack<T>> {
 };
 
 }
+
+#endif

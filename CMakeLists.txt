@@ -18,4 +18,7 @@ include_directories (
 )
 
 add_subdirectory ( "./test" )
+add_subdirectory ( "./benchmark" )
 add_subdirectory ( "./deps/googletest" )
+option ( BENCHMARK_ENABLE_TESTING OFF ) 
+add_subdirectory ( "./deps/benchmark" )

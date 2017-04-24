@@ -1,0 +1,5 @@
+include_directories( include )
+include_directories( ${benchmark_SOURCE_DIR}/include )
+set ( unpack_benchmark_sources unpack_benchmark.cc )
+add_executable( unpack_benchmark ${unpack_benchmark_sources} )
+target_link_libraries( unpack_benchmark benchmark )

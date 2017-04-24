@@ -1,5 +1,5 @@
-#ifndef UNPACK_VECTOR_DETAILS
-#define UNPACK_VECTOR_DETAILS
+#ifndef UNPACK_DETAILS
+#define UNPACK_DETAILS
 
 #include <tuple>
 #include <vector>

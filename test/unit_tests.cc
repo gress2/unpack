@@ -484,6 +484,16 @@ TEST_F(UnpackTest, InsertIListCorrect) {
     ASSERT_EQ(*(++res_it), _e1);
 }
 
+TEST_F(UnpackTest, EmplaceBackCorrect) {
+    _v0 = { _e0 };
+    auto ref = _v0.emplace_back(6, 7);
+    ASSERT_EQ(std::get<0>(ref), 6);
+    ASSERT_EQ(std::get<1>(ref), 7);
+    ref = _v0.emplace_back(0, 10000);
+    ASSERT_EQ(std::get<0>(ref), 0);
+    ASSERT_EQ(std::get<1>(ref), 10000);
+}
+
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
     return RUN_ALL_TESTS();

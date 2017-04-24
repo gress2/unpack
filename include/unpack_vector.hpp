@@ -101,6 +101,16 @@ class vector<unpack<T>> {
                 cur_vect.push_back(new_elem);
             }, elem, _data);
         }
+
+        // TODO: make sure we're getting perfect forwarding
+        // TODO: strange case of calling emplace_back();
+        template <typename...Args>
+        tuple_refs_type emplace_back(Args&&...args) {
+            tuple_for_each([](auto&& _args, auto& cur_vect) {
+                cur_vect.emplace_back(std::forward<decltype(_args)>(_args));
+            }, std::make_tuple(std::forward<Args>(args)...), _data);
+            return this->operator[](size() - 1);
+        }
         
         void reserve(size_t size) {
             tuple_for_each([size](auto& cur_vect) {

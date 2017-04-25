@@ -80,6 +80,24 @@ class vector<unpack<T>> {
             return *this;
         }
 
+        void assign(size_t count, const T& value) {
+            tuple_for_each([count](auto& cur_vect, auto& cur_elem) {
+                cur_vect.assign(count, cur_elem);
+            }, _data, value);
+        }
+
+        template <typename InputIt>
+        void assign(InputIt first, InputIt last) {
+            tuple_for_each([](auto& cur_vect, auto& cur_first_iter, auto& cur_last_iter) {
+                cur_vect.assign(cur_first_iter, cur_last_iter);
+            }, _data, *(first.data()), *(last.data()));
+        }
+
+        // TODO: split the ilist?
+        void assign(std::initializer_list<T> ilist) {
+            operator=(ilist);
+        }
+
         size_t size() const {
             return std::get<0>(_data).size();
         }
@@ -102,6 +120,16 @@ class vector<unpack<T>> {
             }, elem, _data);
         }
 
+        template <typename...Args>
+        iterator emplace(const_iterator pos, Args&&...args) {
+            tuple_for_each([](auto&& _args, auto& cur_vect, auto& cur_iter) {
+                cur_iter = cur_vect.emplace(cur_iter, std::forward<decltype(_args)>(_args)); 
+            }, std::make_tuple(std::forward<Args>(args)...), _data, *(pos.data()));
+            iterator it = begin();
+            std::advance(it, std::distance(cbegin(), pos)); 
+            return it;
+        }
+
         // TODO: make sure we're getting perfect forwarding
         // TODO: strange case of calling emplace_back();
         template <typename...Args>
@@ -110,6 +138,24 @@ class vector<unpack<T>> {
                 cur_vect.emplace_back(std::forward<decltype(_args)>(_args));
             }, std::make_tuple(std::forward<Args>(args)...), _data);
             return this->operator[](size() - 1);
+        }
+
+        iterator erase(const_iterator pos) {
+            tuple_for_each([](auto& cur_vect, auto& cur_iter) {
+                cur_iter = cur_vect.erase(cur_iter);
+            }, _data, *(pos.data()));    
+            iterator it = begin();
+            std::advance(it, std::distance(cbegin(), pos));
+            return it;
+        }
+
+        iterator erase(const_iterator first, const_iterator last) {
+            tuple_for_each([](auto& cur_vect, auto& cur_first_iter, auto& cur_last_iter) {
+                cur_last_iter = cur_vect.erase(cur_first_iter, cur_last_iter);
+            }, _data, *(first.data()), *(last.data()));
+            iterator it = begin();
+            std::advance(it, std::distance(cbegin(), last));
+            return it;
         }
         
         void reserve(size_t size) {
@@ -169,7 +215,7 @@ class vector<unpack<T>> {
         iterator insert(const_iterator pos, std::initializer_list<T> ilist) {
             auto end = ilist.end(); 
             iterator it = begin();
-            for (auto cur = ilist.end(); cur != ilist.begin(); ) {
+            for (auto cur = end; cur != ilist.begin(); ) {
                 cur--;
                 it = insert(pos, *cur);
             }
@@ -186,6 +232,12 @@ class vector<unpack<T>> {
         void resize(size_t size) {
             tuple_for_each([size](auto& cur_vect) { cur_vect.resize(size); }, _data);
         }
+
+        void resize(size_t size, const T& value) {
+            tuple_for_each([size](auto& cur_vect, auto& cur_elem) { 
+                cur_vect.resize(size, cur_elem);
+            }, _data, value); 
+        } 
 
         void shrink_to_fit() {
             tuple_for_each([](auto& cur_vect) { cur_vect.shrink_to_fit(); }, _data);

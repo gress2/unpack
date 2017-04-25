@@ -90,6 +90,13 @@ TEST_F(UnpackTest, EmptyIsCorrect) {
 TEST_F(UnpackTest, ResizeIncreasesElementsCorrectly) {
     _v0.resize(1000);
     ASSERT_EQ(_v0.size(), 1000);
+    ASSERT_EQ(_v0[500], std::make_tuple(0, 0));
+}
+
+TEST_F(UnpackTest, ResizeWithValueIncreasesElementsCorrectly) {
+    _v0.resize(1000, _e0);
+    ASSERT_EQ(_v0.size(), 1000);
+    ASSERT_EQ(_v0[500], _e0);
 }
 
 TEST_F(UnpackTest, ResizeReducesElementsCorrectly) {
@@ -98,6 +105,13 @@ TEST_F(UnpackTest, ResizeReducesElementsCorrectly) {
     }
     _v0.resize(500);
     ASSERT_EQ(_v0.size(), 500);
+}
+
+TEST_F(UnpackTest, ResizeWithValueReducesElementsCorrectly) {
+    _v0.resize(1000, _e0);
+    _v0.resize(500, _e1);
+    ASSERT_EQ(_v0.size(), 500);
+    ASSERT_EQ(_v0[250], _e0);
 }
 
 TEST_F(UnpackTest, ReserveIncreasesCapacity) {
@@ -188,24 +202,54 @@ TEST_F(UnpackTest, CopyConstructorCorrect) {
     ASSERT_EQ(_v0.size(), _v2.size());
 }
 
-TEST_F(UnpackTest, AssignmentCorrectForLValRef) {
+TEST_F(UnpackTest, OperatorEqualCorrectForLValRef) {
     _v0 = { _e0, _e1 };
     _v1 = _v0; 
     ASSERT_EQ(_v1[0], _v0[0]);
     ASSERT_EQ(_v1.size(), _v0.size());
 }
 
-TEST_F(UnpackTest, AssignmentCorrectForRValRef) {
+TEST_F(UnpackTest, OperatorEqualCorrectForRValRef) {
     _v0 = { _e0, _e1 };
     _v1 = std::move(_v0); 
     ASSERT_EQ(_v1[0], _e0);
     ASSERT_EQ(_v1.size(), 2);
 }
 
-TEST_F(UnpackTest, AssignmentCorrectForIList) {
+TEST_F(UnpackTest, OperatorEqualCorrectForIList) {
     _v0 = { _e0, _e1, _e2, _e3 };
     ASSERT_EQ(_v0[0], _e0);
     ASSERT_EQ(_v0[2], _e2);
+}
+
+TEST_F(UnpackTest, AssignCorrect) {
+    _v0.assign(500, _e0);
+    ASSERT_EQ(_v0.size(), 500);
+    ASSERT_EQ(_v0[250], _e0);
+    _v0.assign(200, _e1);
+    ASSERT_EQ(_v0.size(), 200);
+    ASSERT_EQ(_v0[100], _e1);
+}
+
+TEST_F(UnpackTest, AssignByIteratorCorrect) {
+    _v0 = { _e0, _e1, _e2, _e3, _e4 };
+    _v1.assign(_v0.cbegin(), _v0.cend());
+    ASSERT_EQ(_v0, _v1);
+    auto start = _v0.cbegin();
+    start++;
+    auto end = _v0.cend();
+    end--;
+    _v1.assign(start, end);
+    ASSERT_EQ(_v1.size(), 3);
+    ASSERT_EQ(_v1[1], _e2); 
+}
+
+TEST_F(UnpackTest, AssignInitializationListCorrect) {
+    _v0.assign({_e0, _e1, _e2, _e3});
+    ASSERT_EQ(_v0.size(), 4);
+    _v0.assign({_e4});
+    ASSERT_EQ(_v0.size(), 1);
+    ASSERT_EQ(*(_v0.cbegin()), _e4);
 }
 
 TEST_F(UnpackTest, MoveConstructorCorrect) {
@@ -484,14 +528,67 @@ TEST_F(UnpackTest, InsertIListCorrect) {
     ASSERT_EQ(*(++res_it), _e1);
 }
 
+TEST_F(UnpackTest, EmplacePlacesTupleInVectorAndReturnsIter) {
+    _v0 = { _e0, _e1, _e2 };
+    auto it = _v0.cbegin();
+    it++;
+    auto pos = _v0.emplace(it, 8, 98.4);
+    ASSERT_EQ(*pos, _e3);
+    ASSERT_EQ(*pos, *it);
+    ASSERT_EQ(*(--pos), _e0);
+
+    it = _v0.cbegin();
+    std::advance(it, 2);
+    pos = _v0.emplace(it, 56, 62.0);
+    ASSERT_EQ(*pos, _e4);
+    ASSERT_EQ(*(--pos), _e3);
+    std::advance(pos, 2);
+    ASSERT_EQ(*pos, _e1); 
+}
+
 TEST_F(UnpackTest, EmplaceBackCorrect) {
     _v0 = { _e0 };
     auto ref = _v0.emplace_back(6, 7);
     ASSERT_EQ(std::get<0>(ref), 6);
     ASSERT_EQ(std::get<1>(ref), 7);
     ref = _v0.emplace_back(0, 10000);
+    ASSERT_EQ(_v0.size(), 3);
     ASSERT_EQ(std::get<0>(ref), 0);
     ASSERT_EQ(std::get<1>(ref), 10000);
+}
+
+TEST_F(UnpackTest, EraseRemovesElementReturnIterToNext) {
+    _v0 = { _e0, _e1, _e2 };
+    auto it = _v0.cbegin();
+    it++;
+    auto pos = _v0.erase(it);
+    ASSERT_EQ(_v0.size(), 2);
+    ASSERT_EQ(*pos, _e2);
+    ASSERT_EQ(*(--pos), _e0);
+    std::advance(pos, 2);
+    ASSERT_TRUE(pos == _v0.end());
+
+    _v0 = { _e0, _e1 };
+    it = _v0.cend();
+    it--;
+    pos = _v0.erase(it);
+    ASSERT_EQ(_v0.size(), 1);
+    ASSERT_TRUE(pos == _v0.end());
+}
+
+TEST_F(UnpackTest, EraseRangeRemovesAllElemsInRange) {
+    _v0 = { _e0, _e1, _e2, _e3, _e4 };
+    auto start_it = _v0.cbegin();
+    start_it++;
+    auto end_it = _v0.cend();
+    end_it--;
+    auto pos = _v0.erase(start_it, end_it);
+    ASSERT_EQ(_v0.size(), 2);
+    ASSERT_EQ(*pos, _e4);
+    _v0 = { _e0, _e1, _e2, _e3, _e4 };
+    pos = _v0.erase(_v0.cbegin(), _v0.cend());
+    ASSERT_EQ(_v0.size(), 0);
+    ASSERT_TRUE(pos == _v0.end());
 }
 
 int main(int argc, char **argv) {

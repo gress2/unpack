@@ -166,4 +166,12 @@ void tuple_for_each(Func&& f, Tuples&& ... tuples) {
             std::make_index_sequence<N>{}, std::forward<Tuples>(tuples) ... );
 }
 
+void throw_if_out_of_bounds(size_t index, size_t size) {
+    if (index >= size) {
+        std::string error = "vector::at: __n (which is " + std::to_string(index) + 
+            ") >= this->size() (which is " + std::to_string(size) + ")";
+        throw std::out_of_range(error);
+    }
+}
+
 #endif

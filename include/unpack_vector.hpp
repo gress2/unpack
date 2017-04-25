@@ -18,16 +18,6 @@ class vector<unpack<T>> {
         using tuple_vec_iter_type = typename unpack_tuple_vec_iter_type<T>::type;
         using tuple_vec_const_iter_type = typename unpack_tuple_vec_const_iter_type<T>::type;
         data_type _data;
-        
-        void throw_if_out_of_bounds(size_t index) const {
-            if (index >= this->size()) {
-                std::string error = "vector::at: __n (which is " + std::to_string(index) + 
-                    ") >= this->size() (which is " + std::to_string(this->size()) + ")";
-                throw std::out_of_range(error);
-            }
-        }
-        using iterator = unpack_iterator<tuple_vec_iter_type>;
-        using const_iterator = unpack_const_iterator<tuple_vec_const_iter_type>;
 
     public:
         using value_type = T;
@@ -35,6 +25,8 @@ class vector<unpack<T>> {
         using difference_type = ptrdiff_t;
         using reference = value_type&;
         using const_reference = const value_type&;
+        using iterator = unpack_iterator<tuple_vec_iter_type>;
+        using const_iterator = unpack_const_iterator<tuple_vec_const_iter_type>;
 
         vector<unpack<T>>() {}
 
@@ -50,15 +42,13 @@ class vector<unpack<T>> {
             }, v._data, _data);
         }
 
-        vector<unpack<T>> 
-            (std::initializer_list<T> ilist) {
+        vector<unpack<T>> (std::initializer_list<T> ilist) {
             for (auto& tuple : ilist) {
                 push_back(tuple);
             }  
         }
 
         vector<unpack<T>>& operator=(const vector<unpack<T>>& v) {
-            // TODO: is this ok? / reuse of code
             tuple_for_each([](auto& _old, auto& _new) {
                 _new = _old;
             }, v._data, _data); 
@@ -252,12 +242,12 @@ class vector<unpack<T>> {
         }
 
         tuple_refs_type at(size_t index) {
-            throw_if_out_of_bounds(index);
+            throw_if_out_of_bounds(index, size());
             return tuple_r_at_index(_data, index);
         }
 
         tuple_const_refs_type at(size_t index) const {
-            throw_if_out_of_bounds(index);
+            throw_if_out_of_bounds(index, size());
             return tuple_r_at_index(_data, index);
         }
 

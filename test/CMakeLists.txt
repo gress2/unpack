@@ -1,5 +1,4 @@
 include_directories( include )
-include_directories( ${gtest_SOURCE_DIR}/include )
 set ( test_sources unit_tests.cc )
 add_executable( unit_tests ${test_sources} )
 target_link_libraries( unit_tests gtest_main )

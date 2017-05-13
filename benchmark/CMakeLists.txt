@@ -1,5 +1,7 @@
 include_directories( ${CMAKE_SOURCE_DIR}/include )
 include_directories( ${CMAKE_SOURCE_DIR}/deps/benchmark/include )
 set ( unpack_benchmark_sources unpack_benchmark.cc )
+set ( unpack_google_benchmark_sources unpack_google_benchmark.cc )
 add_executable( unpack_benchmark ${unpack_benchmark_sources} )
-target_link_libraries( unpack_benchmark benchmark )
+add_executable( unpack_google_benchmark ${unpack_google_benchmark_sources} )
+target_link_libraries( unpack_google_benchmark benchmark )

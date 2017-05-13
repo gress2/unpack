@@ -17,8 +17,8 @@ By wrapping the `std::tuple` in an `unpack` we can store the data as if it were 
 
 ### Usage
 ##### Supported types
-1. POD
-2. Standard containers
+1. std::tuple 
+More types supported in future 
 
 ##### Instantiation
 Here are a few examples of how you might instantiate a `std::vector<unpack<T>>`:

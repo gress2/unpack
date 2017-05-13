@@ -48,6 +48,10 @@ class vector<unpack<T>> {
             }  
         }
 
+        vector<unpack<T>> (std::size_t size) {
+            resize(size);
+        }
+
         vector<unpack<T>>& operator=(const vector<unpack<T>>& v) {
             tuple_for_each([](auto& _old, auto& _new) {
                 _new = _old;

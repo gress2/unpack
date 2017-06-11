@@ -133,18 +133,20 @@ using type1 = typename std::tuple<int, double, double>;
 using type2 = typename std::tuple<int, int, unsigned char>; 
 
 template <typename T>
-auto simple(T&& v) {
+void simple(T&& t) {
+    std::cout << "simple" << std::endl;
     for (size_t i = 0; i< 1000; i++) {
-        for (auto&& element : v) {
+        for (auto&& element : t) {
             std::get<0>(element) *= 2;
         }
     }
 }
 
+// TODO: make this actually complex
 template <typename T>
-auto complex(T&& v) {
+void complex(T&& t) {
     for (size_t i = 0; i < 1000; i++) {
-        for (auto&& element : v) {
+        for (auto&& element : t) {
             std::get<0>(element) += 2;
         }
     }
@@ -152,17 +154,18 @@ auto complex(T&& v) {
  
 struct opts {
     enum data_structure { aos, soa };
-    enum complexity { simple, complex };
     enum access_pattern { independent, single, combined };
     enum container_type { vector, list, deque };
+    enum _function { simple, complex };
 
     data_structure ds;  
     container_type ct;
     int container_size;
     int type_index;
-    complexity cmp;
+    _function fn;
     access_pattern ap;
 
+    // example: ./Release/bin/unpack_benchmark soa vector 1000000 1 simple independent
     opts(char* argv[]) {
         if (strncmp(argv[1], "aos", 3) == 0) {
             ds = opts::data_structure::aos; 
@@ -190,13 +193,14 @@ struct opts {
         }
 
         if (strncmp(argv[5], "simple", 10) == 0) {
-            cmp = opts::complexity::simple; 
+            fn = opts::_function::simple; 
         } else if (strncmp(argv[5], "complex", 10) == 0) {
-            cmp = opts::complexity::complex;
+            fn = opts::_function::complex;
         } else {
-            throw std::runtime_error("Invalid complexity provided");
+            throw std::runtime_error("Invalid function provided");
         } 
 
+        // TODO: implement access patterns
         if (strncmp(argv[6], "independent", 15) == 0) {
             ap = opts::access_pattern::independent;
         } else if (strncmp(argv[6], "single", 15) == 0) {
@@ -210,8 +214,12 @@ struct opts {
 };
 
 template <typename T>
-auto run_fn(T&& t) {
-
+auto run_fn(T&& t, opts::_function fn) {
+    if (fn == opts::_function::simple) {
+        simple(std::forward<T>(t));
+    } else {
+        complex(std::forward<T>(t));
+    }
 }
 
 template <typename T>
@@ -230,22 +238,55 @@ void dispatch(opts& _opts) {
    switch (_opts.ct) {
        case opts::container_type::vector:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn(make_random_aos<typename T::vector_aos>(_opts.container_size));
+               run_fn(
+                   std::forward<typename T::vector_aos>(
+                       make_random_aos<typename T::vector_aos>(_opts.container_size)
+                   ),
+                   _opts.fn
+               );
            } else {
-               run_fn(make_random_soa<typename T::vector_soa>(_opts.container_size));
+               run_fn(
+                   std::forward<typename T::vector_soa>(
+                       make_random_soa<typename T::vector_soa>(_opts.container_size)
+                   ),
+                   _opts.fn
+               );
            }
+           break;
        case opts::container_type::list:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn(make_random_aos<typename T::list_aos>(_opts.container_size));
+               run_fn(
+                   std::forward<typename T::list_aos>(
+                       make_random_aos<typename T::list_aos>(_opts.container_size)
+                   ),
+                   _opts.fn
+               );
            } else {
-               run_fn(make_random_soa<typename T::list_soa>(_opts.container_size));
+               run_fn(
+                   std::forward<typename T::list_soa>(
+                       make_random_soa<typename T::list_soa>(_opts.container_size)
+                   ),
+                   _opts.fn
+               );
            }
+           break;
        case opts::container_type::deque:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn(make_random_aos<typename T::deque_aos>(_opts.container_size));
+               run_fn(
+                   std::forward<typename T::deque_aos>(
+                       make_random_aos<typename T::deque_aos>(_opts.container_size)
+                   ),
+                   _opts.fn
+               );
            } else {
-               run_fn(make_random_soa<typename T::deque_soa>(_opts.container_size));
+               run_fn(
+                   std::forward<typename T::deque_soa>(
+                       make_random_soa<typename T::deque_soa>(_opts.container_size)
+                   ),
+                   _opts.fn
+               );
            }
+           break;
    } 
 }
 
@@ -259,6 +300,7 @@ void run_benchmark(opts& _opts) {
             break;
         case 2: 
             dispatch<type_map<type2>>(_opts);
+            break;
     }
 }
 

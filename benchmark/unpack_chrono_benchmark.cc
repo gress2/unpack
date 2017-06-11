@@ -5,7 +5,6 @@
 
 int main(int argc, char* argv[])
 {
-    using type = std::tuple<int, double, double>;
     const std::size_t count = argc > 1 ? std::stoull(argv[1]) : 1 << 20;
     volatile unsigned char tmp_aos = 0;
     volatile unsigned char tmp_soa = 0;

@@ -41,4 +41,5 @@ void SoaFullSuite() {
 int main(int argc, char* argv[]) {
     assert(argc == 7); 
     unpack_benchmark::opts o(argv);
+    run_benchmark(o);
 }

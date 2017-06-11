@@ -9,8 +9,8 @@ int main(int argc, char* argv[])
     const std::size_t count = argc > 1 ? std::stoull(argv[1]) : 1 << 20;
     volatile unsigned char tmp_aos = 0;
     volatile unsigned char tmp_soa = 0;
-    auto aos = unpack_benchmark::make_random_aos<type>(count);
-    auto soa = unpack_benchmark::make_random_soa<unpack<type>>(count);
+    auto aos = unpack_benchmark::make_random_aos<std::vector<std::tuple<int, double, double>>>(count);
+    auto soa = unpack_benchmark::make_random_soa<std::vector<unpack<std::tuple<int, double, double>>>>(count);
     auto doubling = [](auto&& v){
         for (size_t i = 0; i < 1000; i++) {
             for (auto&& element : v) {

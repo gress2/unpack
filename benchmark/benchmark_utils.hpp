@@ -58,10 +58,9 @@ using uniform_distribution = std::conditional_t<
         std::conditional_t<std::is_integral<T>::value, T, int>
     >
 >;
-
-// Make a random array of structures
-template <class T>
-std::vector<T> make_random_aos(
+// TODO: allocator
+template <typename T>
+T make_random_aos(
     std::size_t count,
     std::size_t min = std::numeric_limits<std::size_t>::min(),
     std::size_t max = std::numeric_limits<std::size_t>::max(),
@@ -69,20 +68,19 @@ std::vector<T> make_random_aos(
 ) {
     xorshift_engine engine(seed);
     uniform_distribution<std::size_t> distribution(min, max);
-    std::vector<T> vector(count);
-    T tmp;
+    T container(count);
+    typename T::value_type tmp;
     for (std::size_t i = 0; i < count; ++i) {
         tuple_for_each([&distribution, &engine](auto&& element){
             element = distribution(engine);
         }, tmp);
-        vector[i] = tmp;
+        container[i] = tmp;
     }
-    return vector;
-}
-
-// Make a random structure of arrays
-template <class T>
-std::vector<T> make_random_soa(
+    return container;
+} 
+// TODO: allocator
+template <typename T>
+T make_random_soa(
     std::size_t count,
     std::size_t min = std::numeric_limits<std::size_t>::min(),
     std::size_t max = std::numeric_limits<std::size_t>::max(),
@@ -90,13 +88,13 @@ std::vector<T> make_random_soa(
 ) {
     xorshift_engine engine(seed);
     uniform_distribution<std::size_t> distribution(min, max);
-    std::vector<T> vector(count);
+    T container(count);
     for (std::size_t i = 0; i < count; ++i) {
         tuple_for_each([&distribution, &engine](auto&& element){
             element = distribution(engine);
-        }, vector[i]);
+        }, container[i]);
     }
-    return vector;
+    return container;
 }
 
 // Benchmark a function
@@ -217,16 +215,12 @@ auto run_fn(T&& t) {
 }
 
 template <typename T>
-auto build_container() {
-    return T{};
-}
-
-template <typename T>
 struct type_map {
     using vector_aos = std::vector<T>;
     using vector_soa = std::vector<unpack<T>>;
-    using list_aos = std::list<T>;
-    using list_soa = std::list<T>;
+    // TODO: fix make_random_* functions to support lists
+    using list_aos = std::vector<T>;
+    using list_soa = std::vector<unpack<T>>;
     using deque_aos = std::deque<T>;
     using deque_soa = std::deque<T>;
 };
@@ -236,21 +230,21 @@ void dispatch(opts& _opts) {
    switch (_opts.ct) {
        case opts::container_type::vector:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn(build_container<typename T::vector_aos>());
+               run_fn(make_random_aos<typename T::vector_aos>(_opts.container_size));
            } else {
-               run_fn(build_container<typename T::vector_soa>());
+               run_fn(make_random_soa<typename T::vector_soa>(_opts.container_size));
            }
        case opts::container_type::list:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn(build_container<typename T::list_aos>());
+               run_fn(make_random_aos<typename T::list_aos>(_opts.container_size));
            } else {
-               run_fn(build_container<typename T::list_soa>());
+               run_fn(make_random_soa<typename T::list_soa>(_opts.container_size));
            }
        case opts::container_type::deque:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn(build_container<typename T::deque_aos>());
+               run_fn(make_random_aos<typename T::deque_aos>(_opts.container_size));
            } else {
-               run_fn(build_container<typename T::deque_soa>());
+               run_fn(make_random_soa<typename T::deque_soa>(_opts.container_size));
            }
    } 
 }

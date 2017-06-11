@@ -5,7 +5,7 @@
 #include "unpack.hpp"
 
 void AosFullSuite() {
-    using type = std::tuple<int, double, double>;
+    using type = std::vector<std::tuple<int, double, double>>;
     const std::size_t count = 1 << 20; 
     volatile unsigned char tmp_aos = 0;
     auto aos = unpack_benchmark::make_random_aos<type>(count);
@@ -22,10 +22,10 @@ void AosFullSuite() {
 }
 
 void SoaFullSuite() {
-    using type = std::tuple<int, double, double>;
+    using type = std::vector<unpack<std::tuple<int, double, double>>>;
     const std::size_t count = 1 << 20;
     volatile unsigned char tmp_soa = 0;
-    auto soa = unpack_benchmark::make_random_soa<unpack<type>>(count);
+    auto soa = unpack_benchmark::make_random_soa<type>(count);
     auto doubling = [](auto&& v) {
         for (size_t i = 0; i < 1000; i++) {
             for (auto&& element : v) {

@@ -60,41 +60,38 @@ using uniform_distribution = std::conditional_t<
 >;
 // TODO: allocator
 template <typename T>
-T make_random_aos(
-    std::size_t count,
+void fill_container_randomly(
+    T& container,
     std::size_t min = std::numeric_limits<std::size_t>::min(),
     std::size_t max = std::numeric_limits<std::size_t>::max(),
     std::size_t seed = std::random_device()()
 ) {
     xorshift_engine engine(seed);
     uniform_distribution<std::size_t> distribution(min, max);
-    T container(count);
     typename T::value_type tmp;
-    for (std::size_t i = 0; i < count; ++i) {
+    for (std::size_t i = 0; i < container.size(); ++i) {
         tuple_for_each([&distribution, &engine](auto&& element){
             element = distribution(engine);
         }, tmp);
         container[i] = tmp;
     }
-    return container;
-} 
+}
+
 // TODO: allocator
-template <typename T>
-T make_random_soa(
-    std::size_t count,
+template <template <typename...> class T, typename V>
+void fill_container_randomly(
+    T<unpack<V>>& container, 
     std::size_t min = std::numeric_limits<std::size_t>::min(),
     std::size_t max = std::numeric_limits<std::size_t>::max(),
     std::size_t seed = std::random_device()()
 ) {
     xorshift_engine engine(seed);
     uniform_distribution<std::size_t> distribution(min, max);
-    T container(count);
-    for (std::size_t i = 0; i < count; ++i) {
+    for (std::size_t i = 0; i < container.size(); ++i) {
         tuple_for_each([&distribution, &engine](auto&& element){
             element = distribution(engine);
         }, container[i]);
     }
-    return container;
 }
 
 // Benchmark a function
@@ -130,35 +127,15 @@ unsigned char check_bytes(It first, It last) {
 
 using type0 = typename std::tuple<int>;
 using type1 = typename std::tuple<int, double, double>;
-using type2 = typename std::tuple<int, int, unsigned char>; 
+using type2 = typename std::tuple<int, int, unsigned char>;
 
-template <typename T>
-void simple(T&& t) {
-    std::cout << "simple" << std::endl;
-    for (size_t i = 0; i< 1000; i++) {
-        for (auto&& element : t) {
-            std::get<0>(element) *= 2;
-        }
-    }
-}
-
-// TODO: make this actually complex
-template <typename T>
-void complex(T&& t) {
-    for (size_t i = 0; i < 1000; i++) {
-        for (auto&& element : t) {
-            std::get<0>(element) += 2;
-        }
-    }
-}
- 
 struct opts {
     enum data_structure { aos, soa };
     enum access_pattern { independent, single, combined };
     enum container_type { vector, list, deque };
     enum _function { simple, complex };
 
-    data_structure ds;  
+    data_structure ds;
     container_type ct;
     int container_size;
     int type_index;
@@ -168,12 +145,12 @@ struct opts {
     // example: ./Release/bin/unpack_benchmark soa vector 1000000 1 simple independent
     opts(char* argv[]) {
         if (strncmp(argv[1], "aos", 3) == 0) {
-            ds = opts::data_structure::aos; 
+            ds = opts::data_structure::aos;
         } else if (strncmp(argv[1], "soa", 3) == 0) {
             ds = opts::data_structure::soa;
         } else {
             throw std::runtime_error("Invalid data structure provided");
-        } 
+        }
 
         if (strncmp(argv[2], "vector", 10) == 0) {
             ct = opts::container_type::vector;
@@ -182,23 +159,23 @@ struct opts {
         } else if (strncmp(argv[2], "deque", 10) == 0) {
             ct = opts::container_type::deque;
         } else {
-            throw std::runtime_error("Invalid container type provided"); 
+            throw std::runtime_error("Invalid container type provided");
         }
 
-        container_size = std::stoi(argv[3]);        
-        
+        container_size = std::stoi(argv[3]);
+
         type_index = std::stoi(argv[4]);
         if (type_index < 0 || type_index > 40) {
             throw std::runtime_error("Invalid type index provided");
         }
 
         if (strncmp(argv[5], "simple", 10) == 0) {
-            fn = opts::_function::simple; 
+            fn = opts::_function::simple;
         } else if (strncmp(argv[5], "complex", 10) == 0) {
             fn = opts::_function::complex;
         } else {
             throw std::runtime_error("Invalid function provided");
-        } 
+        }
 
         // TODO: implement access patterns
         if (strncmp(argv[6], "independent", 15) == 0) {
@@ -214,11 +191,41 @@ struct opts {
 };
 
 template <typename T>
-auto run_fn(T&& t, opts::_function fn) {
-    if (fn == opts::_function::simple) {
-        simple(std::forward<T>(t));
+void simple(T& t, opts::access_pattern ap) {
+    auto single = [](auto&& tuple) {
+        std::get<0>(tuple) *= 2;
+    };
+    auto independent = [](auto&& tuple) {
+        tuple_for_each([](auto&& e) {
+            e *= 2;
+        }, std::forward<decltype(tuple)>(tuple));
+    };
+    auto f = single;
+    for (size_t i = 0; i< 1000; i++) {
+        for (auto&& e : t) {
+            f(std::forward<decltype(e)>(e));
+        }
+    }
+}
+
+// TODO: make this actually complex
+template <typename T>
+void complex(T& t, opts::access_pattern ap) {
+    for (size_t i = 0; i < 1000; i++) {
+        for (auto&& element : t) {
+            std::get<0>(element) += 2;
+        }
+    }
+}
+
+template <typename T>
+void run_fn(opts& _opts) {
+    T container(_opts.container_size);
+    fill_container_randomly(container);
+    if (_opts.fn == opts::_function::simple) {
+        simple(container, _opts.ap);
     } else {
-        complex(std::forward<T>(t));
+        complex(container, _opts.ap);
     }
 }
 
@@ -238,56 +245,26 @@ void dispatch(opts& _opts) {
    switch (_opts.ct) {
        case opts::container_type::vector:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn(
-                   std::forward<typename T::vector_aos>(
-                       make_random_aos<typename T::vector_aos>(_opts.container_size)
-                   ),
-                   _opts.fn
-               );
+               run_fn<typename T::vector_aos>(_opts);
            } else {
-               run_fn(
-                   std::forward<typename T::vector_soa>(
-                       make_random_soa<typename T::vector_soa>(_opts.container_size)
-                   ),
-                   _opts.fn
-               );
+               run_fn<typename T::vector_soa>(_opts);
            }
            break;
        case opts::container_type::list:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn(
-                   std::forward<typename T::list_aos>(
-                       make_random_aos<typename T::list_aos>(_opts.container_size)
-                   ),
-                   _opts.fn
-               );
+               run_fn<typename T::list_aos>(_opts);
            } else {
-               run_fn(
-                   std::forward<typename T::list_soa>(
-                       make_random_soa<typename T::list_soa>(_opts.container_size)
-                   ),
-                   _opts.fn
-               );
+               run_fn<typename T::list_soa>(_opts);
            }
            break;
        case opts::container_type::deque:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn(
-                   std::forward<typename T::deque_aos>(
-                       make_random_aos<typename T::deque_aos>(_opts.container_size)
-                   ),
-                   _opts.fn
-               );
+               run_fn<typename T::deque_aos>(_opts);
            } else {
-               run_fn(
-                   std::forward<typename T::deque_soa>(
-                       make_random_soa<typename T::deque_soa>(_opts.container_size)
-                   ),
-                   _opts.fn
-               );
+               run_fn<typename T::deque_soa>(_opts);
            }
            break;
-   } 
+   }
 }
 
 void run_benchmark(opts& _opts) {
@@ -295,10 +272,10 @@ void run_benchmark(opts& _opts) {
         case 0:
             dispatch<type_map<type0>>(_opts);
             break;
-        case 1: 
+        case 1:
             dispatch<type_map<type1>>(_opts);
             break;
-        case 2: 
+        case 2:
             dispatch<type_map<type2>>(_opts);
             break;
     }

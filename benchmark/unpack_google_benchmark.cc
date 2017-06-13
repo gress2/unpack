@@ -8,7 +8,8 @@ static void AosFullSuite(benchmark::State& state) {
         const std::size_t count = 1 << 20;
         volatile unsigned char tmp_aos = 0;
         state.PauseTiming();
-        auto aos = unpack_benchmark::make_random_aos<type>(count);
+        auto aos = type(count);
+        unpack_benchmark::fill_container_randomly(aos);
         auto doubling = [](auto&& v) {
             for (size_t i = 0; i < 1000; i++) {
                 for (auto&& element : v) {
@@ -29,7 +30,8 @@ static void SoaFullSuite(benchmark::State& state) {
         using type = std::vector<unpack<std::tuple<int, double, double>>>;
         const std::size_t count = 1 << 20;
         state.PauseTiming();
-        auto soa = unpack_benchmark::make_random_soa<type>(count);
+        auto soa = type(count);
+        unpack_benchmark::fill_container_randomly(soa);
         auto doubling = [](auto&& v) {
             for (size_t i = 0; i < 1000; i++) {
                 for (auto&& element : v) {

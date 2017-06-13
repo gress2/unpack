@@ -8,8 +8,15 @@ int main(int argc, char* argv[])
     const std::size_t count = argc > 1 ? std::stoull(argv[1]) : 1 << 20;
     volatile unsigned char tmp_aos = 0;
     volatile unsigned char tmp_soa = 0;
-    auto aos = unpack_benchmark::make_random_aos<std::vector<std::tuple<int, double, double>>>(count);
-    auto soa = unpack_benchmark::make_random_soa<std::vector<unpack<std::tuple<int, double, double>>>>(count);
+
+    using aos_type = std::vector<std::tuple<int, double, double>>;
+    using soa_type = std::vector<unpack<std::tuple<int, double, double>>>;
+
+    auto aos = aos_type(count);
+    unpack_benchmark::fill_container_randomly(aos);
+    auto soa = soa_type(count);
+    unpack_benchmark::fill_container_randomly(soa);
+
     auto doubling = [](auto&& v){
         for (size_t i = 0; i < 1000; i++) {
             for (auto&& element : v) {

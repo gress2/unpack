@@ -191,28 +191,58 @@ struct opts {
 };
 
 template <typename T>
-void simple(T& t, opts::access_pattern ap) {
-    auto single = [](auto&& tuple) {
-        std::get<0>(tuple) *= 2;
-    };
-    auto independent = [](auto&& tuple) {
-        tuple_for_each([](auto&& e) {
-            e *= 2;
-        }, std::forward<decltype(tuple)>(tuple));
-    };
-    auto f = single;
-    for (size_t i = 0; i< 1000; i++) {
-        for (auto&& e : t) {
-            f(std::forward<decltype(e)>(e));
+void simple_single(T& container) {
+    for (size_t i = 0; i < 1000; i++) {
+        for (auto&& element : container) {
+            std::get<0>(element) *= 2;
+        } 
+    }
+}
+
+template <typename T>
+void complex_single(T& container) {
+    for (size_t i = 0; i < 1000; i++) {
+        for (auto&& element : container) {
+            std::get<0>(element) += 2;
+        } 
+    }
+}
+
+template <typename T>
+void simple_independent(T& container) {
+    for (size_t i = 0; i < 1000; i++) {
+        for (auto&& element : container) {
+            tuple_for_each([](auto&& tuple_elem) {
+               tuple_elem *= 2;
+            }, std::forward<decltype(element)>(element));
         }
     }
 }
 
-// TODO: make this actually complex
 template <typename T>
-void complex(T& t, opts::access_pattern ap) {
+void complex_independent(T& container) {
     for (size_t i = 0; i < 1000; i++) {
-        for (auto&& element : t) {
+        for (auto&& element : container) {
+            tuple_for_each([](auto&& tuple_elem) {
+               tuple_elem += 2;
+            }, std::forward<decltype(element)>(element));
+        }
+    }
+}
+
+template <typename T>
+void simple_combined(T& container) {
+    for (size_t i = 0; i < 1000; i++) {
+        for (auto&& element : container) {
+            std::get<0>(element) += 2;
+        }
+    }
+}
+
+template <typename T>
+void complex_combined(T& container) {
+    for (size_t i = 0; i < 1000; i++) {
+        for (auto&& element : container) {
             std::get<0>(element) += 2;
         }
     }
@@ -223,9 +253,29 @@ void run_fn(opts& _opts) {
     T container(_opts.container_size);
     fill_container_randomly(container);
     if (_opts.fn == opts::_function::simple) {
-        simple(container, _opts.ap);
+        switch(_opts.ap) {
+            case opts::access_pattern::single:
+                simple_single(container); 
+                break;
+            case opts::access_pattern::independent:
+                simple_independent(container); 
+                break;
+            case opts::access_pattern::combined:
+                simple_combined(container);
+                break;
+        }
     } else {
-        complex(container, _opts.ap);
+        switch(_opts.ap) {
+            case opts::access_pattern::single:
+                complex_single(container);
+                break;
+            case opts::access_pattern::independent:
+                complex_independent(container);
+                break;
+            case opts::access_pattern::combined:
+                complex_combined(container);
+                break;
+        } 
     }
 }
 

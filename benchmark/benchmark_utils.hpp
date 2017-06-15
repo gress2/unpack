@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <array>
 #include <chrono>
+#include <cmath>
 #include <deque>
 #include <iostream>
 #include <iterator>
@@ -126,8 +127,9 @@ unsigned char check_bytes(It first, It last) {
 }
 
 using type0 = typename std::tuple<int>;
-using type1 = typename std::tuple<int, double, double>;
-using type2 = typename std::tuple<int, int, unsigned char>;
+using type1 = typename std::tuple<double, double>;
+using type2 = typename std::tuple<int, double, double>;
+using type3 = typename std::tuple<int, int, unsigned char>;
 
 struct opts {
     enum data_structure { aos, soa };
@@ -199,11 +201,33 @@ void simple_single(T& container) {
     }
 }
 
+template <typename T> 
+typename std::enable_if<std::is_integral<typename std::remove_reference<T>::type>
+             ::value>::type complex_one_value_fn(T&& t) {
+	if (t != 2) {
+        if (t < 2 || t % 2 == 0) {
+            t *= 2;
+        }
+        for (int i = 3; (i * i) <= t; i += 2){
+            if (t % i == 0 ) {
+                t *= 2;
+            }
+        }
+    }
+    t *= 4;    
+}
+
+template <typename T> 
+typename std::enable_if<std::is_floating_point<typename std::remove_reference<T>::type>
+             ::value>::type complex_one_value_fn(T&& t) {
+    t = cos(t) + sin(t) + tan(t);		
+}
+
 template <typename T>
 void complex_single(T& container) {
     for (size_t i = 0; i < 1000; i++) {
         for (auto&& element : container) {
-            std::get<0>(element) += 2;
+            complex_one_value_fn(std::get<0>(element));
         } 
     }
 }
@@ -224,26 +248,76 @@ void complex_independent(T& container) {
     for (size_t i = 0; i < 1000; i++) {
         for (auto&& element : container) {
             tuple_for_each([](auto&& tuple_elem) {
-               tuple_elem += 2;
+			   complex_one_value_fn(std::forward
+			       <decltype(tuple_elem)>(tuple_elem));
             }, std::forward<decltype(element)>(element));
         }
     }
+}
+
+double product() {
+    return 1;
+}
+
+template <typename T, typename... Tail>
+auto product(T&& t, Tail&&... tail) {
+    return t * product(std::forward<Tail>(tail)...);
+}
+
+template <typename T, size_t... Indices>
+auto simple_combined_fn_impl(T&& t, std::index_sequence<Indices...>) {
+    return product(std::get<Indices>(t)...);
+} 
+
+template <typename T>
+void simple_combined_fn(T&& t) {
+    constexpr auto size = std::tuple_size<typename std::remove_reference<T>::type>{};
+    auto fn_res = simple_combined_fn_impl(std::forward<T>(t), 
+                    std::make_index_sequence<size>{}); 
+    tuple_for_each([&fn_res](auto&& tuple_elem) {
+        tuple_elem += fn_res;
+    }, std::forward<T>(t));
 }
 
 template <typename T>
 void simple_combined(T& container) {
     for (size_t i = 0; i < 1000; i++) {
         for (auto&& element : container) {
-            std::get<0>(element) += 2;
+            simple_combined_fn(std::forward<decltype(element)>(element));
         }
     }
+}
+
+double l2_norm() {
+    return 0;
+}
+
+template <typename T, typename... Tail>
+auto l2_norm(T&& t, Tail&&... tail) {
+    return pow(std::forward<T>(t), 2) + l2_norm(std::forward<Tail>(tail)...);
+}
+
+// TODO: make this more complex...
+template <typename T, size_t... Indices>
+auto complex_combined_fn_impl(T&& t, std::index_sequence<Indices...>) {
+    return l2_norm(std::get<Indices>(t)...);
+} 
+
+template <typename T>
+void complex_combined_fn(T&& t) {
+    constexpr auto size = std::tuple_size<typename std::remove_reference<T>::type>{};
+    auto fn_res = complex_combined_fn_impl(std::forward<T>(t), 
+                    std::make_index_sequence<size>{}); 
+    tuple_for_each([&fn_res](auto&& tuple_elem) {
+        tuple_elem += fn_res;
+    }, std::forward<T>(t));
 }
 
 template <typename T>
 void complex_combined(T& container) {
     for (size_t i = 0; i < 1000; i++) {
         for (auto&& element : container) {
-            std::get<0>(element) += 2;
+            complex_combined_fn(std::forward<decltype(element)>(element));
         }
     }
 }

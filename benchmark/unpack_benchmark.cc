@@ -9,7 +9,7 @@ void AosFullSuite() {
     const std::size_t count = 1 << 20; 
     volatile unsigned char tmp_aos = 0;
     auto aos = type(count);
-    unpack_benchmark::fill_container_randomly(aos);
+    unpack_benchmark::fill_container_randomly(aos.begin(), aos.end());
     auto doubling = [](auto&& v) {
         for (size_t i = 0; i < 1000; i++) {
             for (auto&& element : v) {
@@ -27,7 +27,7 @@ void SoaFullSuite() {
     const std::size_t count = 1 << 20;
     volatile unsigned char tmp_soa = 0;
     auto soa = type(count);
-    unpack_benchmark::fill_container_randomly(soa);
+    unpack_benchmark::fill_container_randomly(soa.begin(), soa.end());
     auto doubling = [](auto&& v) {
         for (size_t i = 0; i < 1000; i++) {
             for (auto&& element : v) {

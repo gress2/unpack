@@ -9,6 +9,7 @@ class unpack_iterator {
         using underlying_data_type = typename remove_iter_type<tuple_iters_type>::type;
         using tuple_refs_type = typename unpack_tuple_refs_type<underlying_data_type>::type;
         tuple_iters_type _data;
+        tuple_refs_type _tuple_refs;
 
     public:
         using difference_type = std::ptrdiff_t;
@@ -18,7 +19,8 @@ class unpack_iterator {
         using iterator_category = std::bidirectional_iterator_tag;
 
         unpack_iterator(tuple_iters_type&& d) 
-            : _data(std::forward<tuple_iters_type>(d))
+            : _data(std::forward<tuple_iters_type>(d)),
+              _tuple_refs(make_tuple_refs(_data))
         {
         }
         
@@ -44,8 +46,9 @@ class unpack_iterator {
             return it;    
         }
 
-        tuple_refs_type operator*() {
-            return make_tuple_refs(_data); 
+        tuple_refs_type& operator*() {
+            _tuple_refs = make_tuple_refs(_data);
+            return _tuple_refs; 
         }
 
         bool operator==(const unpack_iterator& rhs) {
@@ -54,6 +57,40 @@ class unpack_iterator {
 
         bool operator!=(const unpack_iterator& rhs) {
             return rhs._data != _data;       
+        }
+
+        difference_type operator-(const unpack_iterator& rhs) {
+            return std::get<0>(_data) - std::get<0>(rhs._data);
+        }
+
+        unpack_iterator& operator-=(difference_type dt) {
+            tuple_for_each([&dt](auto &&iter) {
+                iter -= dt;
+            }, _data);
+            return *this;
+        }
+
+        unpack_iterator& operator-(difference_type dt) {
+            unpack_iterator tmp = *this;
+            tmp -= dt;
+            return tmp;    
+        }
+
+        unpack_iterator& operator+=(difference_type dt) {
+            tuple_for_each([&dt](auto &&iter) {
+                iter += dt; 
+            }, _data);
+            return *this;
+        }
+
+        unpack_iterator operator+(difference_type dt) {
+            unpack_iterator tmp = *this;
+            tmp += dt;
+            return tmp;
+        }
+
+        bool operator<(const unpack_iterator& rhs) {
+            return std::get<0>(_data) < std::get<0>(rhs._data); 
         }
 
         tuple_iters_type* data() {
@@ -103,7 +140,7 @@ class unpack_const_iterator {
     }
 
     tuple_const_refs_type operator*() {
-        return make_tuple_refs(_data); 
+        return  make_tuple_refs(_data);
     }
 
     bool operator==(const unpack_const_iterator& rhs) {
@@ -113,7 +150,40 @@ class unpack_const_iterator {
     bool operator!=(const unpack_const_iterator& rhs) {
         return rhs._data != _data;       
     }
-   
+    difference_type operator-(const unpack_const_iterator& rhs) {
+        return std::get<0>(_data) - std::get<0>(rhs._data);
+    }
+
+    unpack_const_iterator& operator-=(difference_type dt) {
+        tuple_for_each([&dt](auto &&iter) {
+            iter -= dt;
+        }, _data);
+        return *this;
+    }
+
+    unpack_const_iterator& operator-(difference_type dt) {
+        unpack_const_iterator tmp = *this;
+        tmp -= dt;
+        return tmp;    
+    }
+
+    unpack_const_iterator& operator+=(difference_type dt) {
+        tuple_for_each([&dt](auto &&iter) {
+            iter += dt; 
+        }, _data);
+        return *this;
+    }
+
+    unpack_const_iterator operator+(difference_type dt) {
+        unpack_const_iterator tmp = *this;
+        tmp += dt;
+        return tmp;
+    }
+
+    bool operator<(const unpack_const_iterator& rhs) {
+        return std::get<0>(_data) < std::get<0>(rhs._data); 
+    }
+
     tuple_iters_type* data() {
         return &_data;
     }

@@ -13,9 +13,9 @@ int main(int argc, char* argv[])
     using soa_type = std::vector<unpack<std::tuple<int, double, double>>>;
 
     auto aos = aos_type(count);
-    unpack_benchmark::fill_container_randomly(aos);
+    unpack_benchmark::fill_container_randomly(aos.begin(), aos.end());
     auto soa = soa_type(count);
-    unpack_benchmark::fill_container_randomly(soa);
+    unpack_benchmark::fill_container_randomly(soa.begin(), soa.end());
 
     auto doubling = [](auto&& v){
         for (size_t i = 0; i < 1000; i++) {

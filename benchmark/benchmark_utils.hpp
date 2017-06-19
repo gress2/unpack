@@ -62,7 +62,7 @@ using uniform_distribution = std::conditional_t<
 
 template <typename T>
 T convert_size_t(std::size_t n) {
-    return T(n); 
+    return static_cast<T>(n); 
 }
 
 template <>
@@ -81,9 +81,9 @@ void fill_container_randomly(
     std::random_device rd;
     std::mt19937 g(rd());
     std::size_t i = 0;
-    for (auto&& it = begin; it != end; ++it) {
+    for (auto it = begin; it != end; ++it) {
         tuple_for_each([&i](auto&& element) {
-            element = convert_size_t<decltype(element)>(i++);
+            element = convert_size_t<typename std::remove_reference<decltype(element)>::type>(i++);
         }, *it); 
     }
     std::shuffle(begin, end, g);

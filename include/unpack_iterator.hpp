@@ -9,7 +9,6 @@ class unpack_iterator {
         using underlying_data_type = typename remove_iter_type<tuple_iters_type>::type;
         using tuple_refs_type = typename unpack_tuple_refs_type<underlying_data_type>::type;
         tuple_iters_type _data;
-        tuple_refs_type _tuple_refs;
 
     public:
         using difference_type = std::ptrdiff_t;
@@ -19,8 +18,7 @@ class unpack_iterator {
         using iterator_category = std::bidirectional_iterator_tag;
 
         unpack_iterator(tuple_iters_type&& d) 
-            : _data(std::forward<tuple_iters_type>(d)),
-              _tuple_refs(make_tuple_refs(_data))
+            : _data(std::forward<tuple_iters_type>(d))
         {
         }
         
@@ -46,9 +44,8 @@ class unpack_iterator {
             return it;    
         }
 
-        tuple_refs_type& operator*() {
-            _tuple_refs = make_tuple_refs(_data);
-            return _tuple_refs; 
+        tuple_refs_type operator*() {
+            return make_tuple_refs(_data);
         }
 
         bool operator==(const unpack_iterator& rhs) {

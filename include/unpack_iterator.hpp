@@ -67,7 +67,7 @@ class unpack_iterator {
             return *this;
         }
 
-        unpack_iterator& operator-(difference_type dt) {
+        unpack_iterator operator-(difference_type dt) {
             unpack_iterator tmp = *this;
             tmp -= dt;
             return tmp;    
@@ -86,8 +86,26 @@ class unpack_iterator {
             return tmp;
         }
 
+        tuple_refs_type operator[](size_t index) {
+            unpack_iterator tmp = *this;
+            tmp += index;
+            return *tmp;
+        }
+
         bool operator<(const unpack_iterator& rhs) {
             return std::get<0>(_data) < std::get<0>(rhs._data); 
+        }
+
+        bool operator<=(const unpack_iterator& rhs) {
+            return std::get<0>(_data) <= std::get<0>(rhs._data); 
+        }
+
+        bool operator>(const unpack_iterator& rhs) {
+            return std::get<0>(_data) > std::get<0>(rhs._data); 
+        }
+
+        bool operator>=(const unpack_iterator& rhs) {
+            return std::get<0>(_data) >= std::get<0>(rhs._data); 
         }
 
         tuple_iters_type* data() {
@@ -158,7 +176,7 @@ class unpack_const_iterator {
         return *this;
     }
 
-    unpack_const_iterator& operator-(difference_type dt) {
+    unpack_const_iterator operator-(difference_type dt) {
         unpack_const_iterator tmp = *this;
         tmp -= dt;
         return tmp;    
@@ -177,8 +195,26 @@ class unpack_const_iterator {
         return tmp;
     }
 
+    tuple_const_refs_type operator[](size_t index) {
+        unpack_const_iterator tmp = *this;
+        tmp += index;
+        return *tmp;
+    }
+
     bool operator<(const unpack_const_iterator& rhs) {
         return std::get<0>(_data) < std::get<0>(rhs._data); 
+    }
+
+    bool operator<=(const unpack_const_iterator& rhs) {
+        return std::get<0>(_data) <= std::get<0>(rhs._data); 
+    }
+
+    bool operator>(const unpack_const_iterator& rhs) {
+        return std::get<0>(_data) > std::get<0>(rhs._data); 
+    }
+
+    bool operator>=(const unpack_const_iterator& rhs) {
+        return std::get<0>(_data) >= std::get<0>(rhs._data); 
     }
 
     tuple_iters_type* data() {

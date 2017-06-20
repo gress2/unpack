@@ -2,6 +2,7 @@
 #include <vector>
 #include <type_traits>
 #include <utility>
+
 #include "unpack.hpp"
 #include "gtest/gtest.h"
 
@@ -421,6 +422,210 @@ TEST_F(UnpackTest, ConstIteratorDistanceCorrect) {
     ASSERT_EQ(std::distance(it0, it1), 0);
     std::advance(it1, 2);
     ASSERT_EQ(std::distance(it0, it1), 2);
+}
+
+TEST_F(UnpackTest, IteratorMinusIterator) {
+    _v0 = { _e0, _e1, _e2, _e3 };
+    auto it0 = _v0.begin();
+    auto it1 = _v0.end();
+    ASSERT_EQ((it1 - it0), 4);
+    it0++;
+    it1--;
+    ASSERT_EQ((it1 - it0), 2);
+    ASSERT_EQ((it0 - it1), -2);
+    it0 = _v0.begin();
+    ASSERT_EQ((_v0.begin() - it0), 0);
+}
+
+TEST_F(UnpackTest, ConstIteratorMinusConstIterator) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2, _e3 };
+    auto it0 = cv.begin();
+    auto it1 = cv.end();
+    ASSERT_EQ((it1 - it0), 4);
+    it0++;
+    it1--;
+    ASSERT_EQ((it1 - it0), 2);
+    ASSERT_EQ((it0 - it1), -2);
+    it0 = cv.begin();
+    ASSERT_EQ((cv.begin() - it0), 0);
+}
+
+TEST_F(UnpackTest, IteratorMinusEquals) {
+    _v0 = { _e0, _e1, _e2, _e3 };
+    auto it0 = _v0.end();
+    it0 -= 4;
+    ASSERT_TRUE(it0 == _v0.begin());
+    auto it1 = _v0.end();
+    it1 -= 2;
+    it0 = _v0.begin();
+    it0++;
+    it0++;
+    ASSERT_TRUE(it0 == it1);
+}
+
+TEST_F(UnpackTest, ConstIteratorMinusEquals) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2, _e3 };
+    auto it0 = cv.end();
+    it0 -= 4;
+    ASSERT_TRUE(it0 == cv.begin());
+    auto it1 = cv.end();
+    it1 -= 2;
+    it0 = cv.begin();
+    it0++;
+    it0++;
+    ASSERT_TRUE(it0 == it1);
+}
+
+TEST_F(UnpackTest, IteratorMinusDifferenceType) {
+    _v0 = { _e0, _e1, _e2, _e3 };
+    auto it0 = _v0.end();
+    it0 = it0 - 4;
+    ASSERT_TRUE(it0 == _v0.begin());
+    auto it1 = _v0.end() - 2;
+    it0 = _v0.begin();
+    it0++;
+    it0++;
+    ASSERT_TRUE(it0 == it1);
+}
+
+TEST_F(UnpackTest, ConstIteratorMinusDifferenceType) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2, _e3 };
+    auto it0 = cv.end();
+    it0 = it0 - 4;
+    ASSERT_TRUE(it0 == cv.begin());
+    auto it1 = cv.end() - 2;
+    it0 = cv.begin();
+    it0++;
+    it0++;
+    ASSERT_TRUE(it0 == it1);
+}
+
+TEST_F(UnpackTest, IteratorPlusDifferenceType) {
+    _v0 = { _e0, _e1, _e2, _e3 };
+    auto it0 = _v0.begin();
+    ASSERT_TRUE((it0 + 4) == _v0.end());
+    auto it1 = _v0.begin() + 1;
+    ASSERT_TRUE((it1 + 1) == (it0 + 2));
+}
+
+TEST_F(UnpackTest, ConstIteratorPlusDifferenceType) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2, _e3 };
+    auto it0 = cv.begin();
+    ASSERT_TRUE((it0 + 4) == cv.end());
+    auto it1 = cv.begin() + 1;
+    ASSERT_TRUE((it1 + 1) == (it0 + 2));
+}
+
+TEST_F(UnpackTest, IteratorPlusEquals) {
+    _v0 = { _e0, _e1, _e2, _e3 };
+    auto it0 = _v0.begin();
+    it0 += 4;
+    ASSERT_TRUE(it0 == _v0.end());
+    it0 = _v0.begin();
+    auto it1 = _v0.begin();
+    it1 += 1;
+    ASSERT_TRUE((it1 += 1) == (it0 += 2));
+}
+
+TEST_F(UnpackTest, ConstIteratorPlusEquals) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2, _e3 };
+    auto it0 = cv.begin();
+    it0 += 4;
+    ASSERT_TRUE(it0 == cv.end());
+    it0 = cv.begin();
+    auto it1 = cv.begin();
+    it1 += 1;
+    ASSERT_TRUE((it1 += 1) == (it0 += 2));
+}
+
+TEST_F(UnpackTest, IteratorLessThan) {
+    _v0 = { _e0, _e1, _e2, _e3};
+    ASSERT_TRUE(_v0.begin() < _v0.end());
+    ASSERT_FALSE(_v0.begin() < _v0.begin());
+    auto it0 = _v0.begin() + 1;
+    auto it1 = _v0.begin();
+    ASSERT_TRUE(it1 < it0);
+}
+
+TEST_F(UnpackTest, ConstIteratorLessThan) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2, _e3 };
+    ASSERT_TRUE(cv.begin() < cv.end());
+    ASSERT_FALSE(cv.begin() < cv.begin());
+    auto it0 = cv.begin() + 1;
+    auto it1 = cv.begin();
+    ASSERT_TRUE(it1 < it0);
+}
+
+TEST_F(UnpackTest, IteratorBracketOperator) {
+    _v0 = { _e0, _e1, _e2, _e3 };
+    auto it0 = _v0.begin();
+    ASSERT_EQ(it0[0], _e0);
+    ASSERT_EQ(it0[2], _e2);
+    it0++;
+    ASSERT_EQ(it0[0], _e1);
+}
+
+TEST_F(UnpackTest, ConstIteratorBracketOperator) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2, _e3 };
+    auto it0 = cv.begin();
+    ASSERT_EQ(it0[0], _e0);
+    ASSERT_EQ(it0[2], _e2);
+    it0++;
+    ASSERT_EQ(it0[0], _e1);
+}
+
+TEST_F(UnpackTest, IteratorGreaterThan) {
+    _v0 = { _e0, _e1, _e2, _e3 };
+    ASSERT_TRUE(_v0.end() > _v0.begin());
+    ASSERT_FALSE(_v0.begin() > _v0.begin());
+    auto it0 = _v0.begin() + 1;
+    auto it1 = _v0.begin() + 3;
+    ASSERT_TRUE(it1 > it0);        
+}
+
+TEST_F(UnpackTest, ConstIteratorGreaterThan) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2, _e3 };
+    ASSERT_TRUE(cv.end() > cv.begin());
+    ASSERT_FALSE(cv.begin() > cv.begin());
+    auto it0 = cv.begin() + 1;
+    auto it1 = cv.begin() + 3;
+    ASSERT_TRUE(it1 > it0);
+}
+
+TEST_F(UnpackTest, IteratorLessThanEquals) {
+    _v0 = { _e0, _e1, _e2, _e3};
+    ASSERT_TRUE(_v0.begin() <= _v0.end());
+    ASSERT_TRUE(_v0.begin() <= _v0.begin());
+    auto it0 = _v0.begin() + 1;
+    auto it1 = _v0.begin();
+    ASSERT_TRUE(it1 <= it0);
+}
+
+TEST_F(UnpackTest, ConstIteratorLessThanEquals) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2, _e3 };
+    ASSERT_TRUE(cv.begin() <= cv.end());
+    ASSERT_TRUE(cv.begin() <= cv.begin());
+    auto it0 = cv.begin() + 1;
+    auto it1 = cv.begin();
+    ASSERT_TRUE(it1 <= it0);
+}
+
+TEST_F(UnpackTest, IteratorGreaterThanEquals) {
+     _v0 = { _e0, _e1, _e2, _e3 };
+     ASSERT_TRUE(_v0.end() >= _v0.end());
+     ASSERT_TRUE(_v0.begin() >= _v0.begin());
+     auto it0 = _v0.begin() + 1;
+     auto it1 = _v0.begin();
+     ASSERT_TRUE(it0 >= it1);
+}
+
+TEST_F(UnpackTest, ConstIteratorGreaterThanEquals) {
+    const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2, _e3 };
+    ASSERT_TRUE(cv.end() >= cv.end());
+    ASSERT_TRUE(cv.begin() >= cv.begin());
+    auto it0 = cv.begin() + 1;
+    auto it1 = cv.begin();
+    ASSERT_TRUE(it0 >= it1);
 }
 
 TEST_F(UnpackTest, IteratedTuplesMutable) {

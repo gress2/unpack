@@ -59,40 +59,34 @@ using uniform_distribution = std::conditional_t<
         std::conditional_t<std::is_integral<T>::value, T, int>
     >
 >;
-// TODO: allocator
+
 template <typename T>
-void fill_container_randomly(
-    T& container,
-    std::size_t min = std::numeric_limits<std::size_t>::min(),
-    std::size_t max = std::numeric_limits<std::size_t>::max(),
-    std::size_t seed = std::random_device()()
-) {
-    xorshift_engine engine(seed);
-    uniform_distribution<std::size_t> distribution(min, max);
-    typename T::value_type tmp;
-    for (std::size_t i = 0; i < container.size(); ++i) {
-        tuple_for_each([&distribution, &engine](auto&& element){
-            element = distribution(engine);
-        }, tmp);
-        container[i] = tmp;
-    }
+T convert_size_t(std::size_t n) {
+    return static_cast<T>(n); 
 }
 
-// TODO: allocator
-template <template <typename...> class T, typename V>
+template <>
+std::string convert_size_t<std::string>(std::size_t n) {
+    return std::to_string(n);
+} 
+
+template <typename It>
 void fill_container_randomly(
-    T<unpack<V>>& container, 
+    It&& begin,
+    It&& end,
     std::size_t min = std::numeric_limits<std::size_t>::min(),
     std::size_t max = std::numeric_limits<std::size_t>::max(),
     std::size_t seed = std::random_device()()
 ) {
-    xorshift_engine engine(seed);
-    uniform_distribution<std::size_t> distribution(min, max);
-    for (std::size_t i = 0; i < container.size(); ++i) {
-        tuple_for_each([&distribution, &engine](auto&& element){
-            element = distribution(engine);
-        }, container[i]);
+    std::random_device rd;
+    std::mt19937 g(rd());
+    std::size_t i = 0;
+    for (auto it = begin; it != end; ++it) {
+        tuple_for_each([&i](auto&& element) {
+            element = convert_size_t<typename std::remove_reference<decltype(element)>::type>(i++);
+        }, *it); 
     }
+    std::shuffle(begin, end, g);
 }
 
 // Benchmark a function
@@ -127,9 +121,10 @@ unsigned char check_bytes(It first, It last) {
 }
 
 using type0 = typename std::tuple<int>;
-using type1 = typename std::tuple<double, double>;
+using type1 = typename std::tuple<int, int, int, int, int>;
 using type2 = typename std::tuple<int, double, double>;
-using type3 = typename std::tuple<int, int, unsigned char>;
+using type3 = typename std::tuple<int, int, int, int, int>;
+using type4 = typename std::tuple<int, int>;
 
 struct opts {
     enum data_structure { aos, soa };
@@ -179,7 +174,6 @@ struct opts {
             throw std::runtime_error("Invalid function provided");
         }
 
-        // TODO: implement access patterns
         if (strncmp(argv[6], "independent", 15) == 0) {
             ap = opts::access_pattern::independent;
         } else if (strncmp(argv[6], "single", 15) == 0) {
@@ -288,19 +282,18 @@ void simple_combined(T& container) {
     }
 }
 
-double l2_norm() {
+double l4_norm() {
     return 0;
 }
 
 template <typename T, typename... Tail>
-auto l2_norm(T&& t, Tail&&... tail) {
-    return pow(std::forward<T>(t), 2) + l2_norm(std::forward<Tail>(tail)...);
+auto l4_norm(T&& t, Tail&&... tail) {
+    return pow(std::forward<T>(t), 4) + l4_norm(std::forward<Tail>(tail)...);
 }
 
-// TODO: make this more complex...
 template <typename T, size_t... Indices>
 auto complex_combined_fn_impl(T&& t, std::index_sequence<Indices...>) {
-    return l2_norm(std::get<Indices>(t)...);
+    return pow(l4_norm(std::get<Indices>(t)...), 1/4.0);
 } 
 
 template <typename T>
@@ -325,7 +318,7 @@ void complex_combined(T& container) {
 template <typename T>
 void run_fn(opts& _opts) {
     T container(_opts.container_size);
-    fill_container_randomly(container);
+    fill_container_randomly(container.begin(), container.end());
     if (_opts.fn == opts::_function::simple) {
         switch(_opts.ap) {
             case opts::access_pattern::single:
@@ -357,11 +350,10 @@ template <typename T>
 struct type_map {
     using vector_aos = std::vector<T>;
     using vector_soa = std::vector<unpack<T>>;
-    // TODO: fix make_random_* functions to support lists
     using list_aos = std::vector<T>;
     using list_soa = std::vector<unpack<T>>;
-    using deque_aos = std::deque<T>;
-    using deque_soa = std::deque<T>;
+    using deque_aos = std::vector<T>;
+    using deque_soa = std::vector<unpack<T>>;
 };
 
 template <typename T>
@@ -401,6 +393,12 @@ void run_benchmark(opts& _opts) {
             break;
         case 2:
             dispatch<type_map<type2>>(_opts);
+            break;
+        case 3:
+            dispatch<type_map<type3>>(_opts);
+            break;
+        case 4:
+            dispatch<type_map<type4>>(_opts);
             break;
     }
 }

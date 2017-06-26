@@ -18,6 +18,7 @@
 
 #include "unpack.hpp"
 #include "random_generator.hpp"
+#include "convert_to_numeric.hpp"
 
 namespace unpack_benchmark
 {
@@ -138,6 +139,8 @@ struct opts {
     }
 };
 
+// SIMPLE OPS - 1 column
+
 template <typename T>
 auto simple_op(T& t) -> decltype((void)(t *= 2)) {
     t *= 2;
@@ -145,7 +148,9 @@ auto simple_op(T& t) -> decltype((void)(t *= 2)) {
 
 template <typename T>
 auto simple_op(T& t) -> decltype((void)(std::get<0>(t))) {
-    
+    tuple_for_each([](auto& tuple_elem) {
+        simple_op(tuple_elem);
+    }, t); 
 }
 
 void simple_op(std::string& s) {
@@ -153,17 +158,22 @@ void simple_op(std::string& s) {
 }
 
 template <typename T>
-void simple_single(T& container, size_t iterations) {
-    for (size_t i = 0; i < iterations; i++) {
-        for (auto&& element : container) {
-            simple_op(std::get<0>(element));
-        } 
+void simple_op_helper(T& t) {
+    for (auto it = t.begin(); it != t.end(); ++it) {
+        simple_op(*it);
     }
 }
 
+template <typename...T>
+void simple_op(T&... t) {
+    simple_op_helper(t...);
+}
+
+// COMPLEX OPS - 1 column
+
 template <typename T> 
 typename std::enable_if<std::is_integral<typename std::remove_reference<T>::type>
-             ::value>::type complex_one_value_fn(T&& t) {
+             ::value>::type complex_op(T& t) {
 	if (t != 2) {
         if (t < 2 || t % 2 == 0) {
             t *= 2;
@@ -179,54 +189,47 @@ typename std::enable_if<std::is_integral<typename std::remove_reference<T>::type
 
 template <typename T> 
 typename std::enable_if<std::is_floating_point<typename std::remove_reference<T>::type>
-             ::value>::type complex_one_value_fn(T&& t) {
+             ::value>::type complex_op(T& t) {
     t = cos(t) + sin(t) + tan(t);		
 }
 
 template <typename T>
-void complex_single(T& container, size_t iterations) {
-    for (size_t i = 0; i < iterations; i++) {
-        for (auto&& element : container) {
-            complex_one_value_fn(std::get<0>(element));
-        } 
-    }
+auto complex_op(T& t) -> decltype((void)(std::get<0>(t))) {
+    tuple_for_each([](auto& tuple_elem) {
+        complex_op(tuple_elem);
+    }, t);
+} 
+
+void complex_op(std::string& s) {
+    s = s.substr(s.size() - 1) + s.substr(0, s.size());
 }
 
 template <typename T>
-void simple_independent(T& container, size_t iterations) {
-    for (size_t i = 0; i < iterations; i++) {
-        for (auto&& element : container) {
-            tuple_for_each([](auto&& tuple_elem) {
-               tuple_elem *= 2;
-            }, std::forward<decltype(element)>(element));
-        }
+void complex_op_helper(T& t) {
+    for (auto it = t.begin(); it != t.end(); ++it) {
+        complex_op(*it);
     }
 }
 
-template <typename T>
-void complex_independent(T& container, size_t iterations) {
-    for (size_t i = 0; i < iterations; i++) {
-        for (auto&& element : container) {
-            tuple_for_each([](auto&& tuple_elem) {
-			   complex_one_value_fn(std::forward
-			       <decltype(tuple_elem)>(tuple_elem));
-            }, std::forward<decltype(element)>(element));
-        }
-    }
+template <typename...T>
+void complex_op(T&... t) {
+   complex_op_helper(t...); 
 }
 
-double product() {
+// SIMPLE OPS - combined columns
+
+double sum() {
     return 1;
 }
 
 template <typename T, typename... Tail>
-auto product(T&& t, Tail&&... tail) {
-    return t * product(std::forward<Tail>(tail)...);
+auto sum(T&& t, Tail&&... tail) {
+    return t + product(std::forward<Tail>(tail)...);
 }
 
 template <typename T, size_t... Indices>
 auto simple_combined_fn_impl(T&& t, std::index_sequence<Indices...>) {
-    return product(std::get<Indices>(t)...);
+    return sum(std::get<Indices>(t)...);
 } 
 
 template <typename T>
@@ -237,15 +240,6 @@ void simple_combined_fn(T&& t) {
     tuple_for_each([&fn_res](auto&& tuple_elem) {
         tuple_elem += fn_res;
     }, std::forward<T>(t));
-}
-
-template <typename T>
-void simple_combined(T& container, size_t iterations) {
-    for (size_t i = 0; i < iterations; i++) {
-        for (auto&& element : container) {
-            simple_combined_fn(std::forward<decltype(element)>(element));
-        }
-    }
 }
 
 double l4_norm() {
@@ -260,7 +254,57 @@ auto l4_norm(T&& t, Tail&&... tail) {
 template <typename T, size_t... Indices>
 auto complex_combined_fn_impl(T&& t, std::index_sequence<Indices...>) {
     return pow(l4_norm(std::get<Indices>(t)...), 1/4.0);
-} 
+}
+
+template <typename T>
+void simple_single(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
+        for (auto&& element : container) {
+            simple_op(std::get<0>(element));
+        } 
+    }
+}
+
+template <typename T>
+void complex_single(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
+        for (auto&& element : container) {
+            complex_op(std::get<0>(element));
+        } 
+    }
+}
+
+template <typename T>
+void simple_independent(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
+        for (auto&& element : container) {
+            tuple_for_each([](auto&& tuple_elem) {
+               simple_op(tuple_elem);
+            }, std::forward<decltype(element)>(element));
+        }
+    }
+}
+
+template <typename T>
+void complex_independent(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
+        for (auto&& element : container) {
+            tuple_for_each([](auto&& tuple_elem) {
+			   complex_op(std::forward
+			       <decltype(tuple_elem)>(tuple_elem));
+            }, std::forward<decltype(element)>(element));
+        }
+    }
+}
+
+template <typename T>
+void simple_combined(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
+        for (auto&& element : container) {
+            simple_combined_fn(std::forward<decltype(element)>(element));
+        }
+    }
+}
 
 template <typename T>
 void complex_combined_fn(T&& t) {
@@ -288,36 +332,25 @@ void run_fn(opts& _opts) {
     if (_opts.fn == opts::_function::simple) {
         switch(_opts.ap) {
             case opts::access_pattern::single:
-               
                 simple_single(container, _opts.loop_iterations); 
                 break;
             case opts::access_pattern::independent:
-                // simple_independent(container, _opts.loop_iterations); 
-
-                simple_single(container, _opts.loop_iterations); 
+                simple_independent(container, _opts.loop_iterations); 
                 break;
             case opts::access_pattern::combined:
                 //simple_combined(container, _opts.loop_iterations);
-
-                simple_single(container, _opts.loop_iterations); 
                 break;
         }
     } else {
         switch(_opts.ap) {
             case opts::access_pattern::single:
-               // complex_single(container, _opts.loop_iterations);
-               
-                simple_single(container, _opts.loop_iterations); 
+                complex_single(container, _opts.loop_iterations);
                 break;
             case opts::access_pattern::independent:
-                //complex_independent(container, _opts.loop_iterations);
-
-                simple_single(container, _opts.loop_iterations); 
+                complex_independent(container, _opts.loop_iterations);
                 break;
             case opts::access_pattern::combined:
                 //complex_combined(container, _opts.loop_iterations);
-
-                simple_single(container, _opts.loop_iterations); 
                 break;
         } 
     }

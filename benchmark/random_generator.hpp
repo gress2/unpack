@@ -1,3 +1,6 @@
+#ifndef RANDOM_GENERATOR
+#define RANDOM_GENERATOR
+
 #include <algorithm>
 #include <array>
 #include <iostream>
@@ -85,3 +88,5 @@ struct random_generator {
             gen_helper(t...);
         }
 };
+
+#endif

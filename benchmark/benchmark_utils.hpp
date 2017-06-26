@@ -1,10 +1,7 @@
 #ifndef BENCHMARK_UTILS
 #define BENCHMARK_UTILS
 
-// Author: Vincent Reverdy
 // Benchmarking unpacking strategies
-#include "unpack.hpp"
-
 #include <algorithm>
 #include <array>
 #include <chrono>
@@ -19,56 +16,11 @@
 #include <thread>
 #include <vector>
 
+#include "unpack.hpp"
+#include "random_generator.hpp"
+
 namespace unpack_benchmark
 {
-
-// Xorshift random engine
-struct xorshift_engine
-{
-    using type = unsigned int;
-    using result_type = type;
-    constexpr xorshift_engine(result_type seed = 0) noexcept
-    : _state(seed ? seed : !seed) {
-    }
-    static constexpr result_type min() noexcept {
-        return std::numeric_limits<result_type>::min();
-    }
-    static constexpr result_type max() noexcept {
-        return std::numeric_limits<result_type>::max();
-    }
-    constexpr result_type operator()() noexcept {
-        constexpr std::size_t shift0 = 13;
-        constexpr std::size_t shift1 = 17;
-        constexpr std::size_t shift2 = 5;
-        _state ^= _state << shift0;
-        _state ^= _state >> shift1;
-        _state ^= _state << shift2;
-        return _state;
-    }
-    private: type _state;
-};
-
-// Generic uniform random distribution type
-template <class T>
-using uniform_distribution = std::conditional_t<
-    std::is_floating_point<T>::value,
-    std::uniform_real_distribution<
-        std::conditional_t<std::is_floating_point<T>::value, T, double>
-    >,
-    std::uniform_int_distribution<
-        std::conditional_t<std::is_integral<T>::value, T, int>
-    >
->;
-
-template <typename T>
-T convert_size_t(std::size_t n) {
-    return static_cast<T>(n); 
-}
-
-template <>
-std::string convert_size_t<std::string>(std::size_t n) {
-    return std::to_string(n);
-} 
 
 template <typename It>
 void fill_container_randomly(
@@ -78,15 +30,12 @@ void fill_container_randomly(
     std::size_t max = std::numeric_limits<std::size_t>::max(),
     std::size_t seed = std::random_device()()
 ) {
-    std::random_device rd;
-    std::mt19937 g(rd());
-    std::size_t i = 0;
+    random_generator rg;
     for (auto it = begin; it != end; ++it) {
-        tuple_for_each([&i](auto&& element) {
-            element = convert_size_t<typename std::remove_reference<decltype(element)>::type>(i++);
-        }, *it); 
+        tuple_for_each([&rg](auto&& element) {
+            rg.generate(element);
+        }, *it);
     }
-    std::shuffle(begin, end, g);
 }
 
 // Benchmark a function
@@ -121,10 +70,10 @@ unsigned char check_bytes(It first, It last) {
 }
 
 using type0 = typename std::tuple<int>;
-using type1 = typename std::tuple<int, int, int, int, int>;
+using type1 = typename std::tuple<int, char, long, double>;
 using type2 = typename std::tuple<int, double, double>;
-using type3 = typename std::tuple<int, int, int, int, int>;
-using type4 = typename std::tuple<int, int>;
+using type3 = typename std::tuple<long, long, long>;
+using type4 = typename std::tuple<std::string, std::string>;
 
 struct opts {
     enum data_structure { aos, soa };
@@ -134,10 +83,11 @@ struct opts {
 
     data_structure ds;
     container_type ct;
-    int container_size;
-    int type_index;
+    size_t container_size;
+    size_t type_index;
     _function fn;
     access_pattern ap;
+    size_t loop_iterations;
 
     // example: ./Release/bin/unpack_benchmark soa vector 1000000 1 simple independent
     opts(char* argv[]) {
@@ -162,7 +112,7 @@ struct opts {
         container_size = std::stoi(argv[3]);
 
         type_index = std::stoi(argv[4]);
-        if (type_index < 0 || type_index > 40) {
+        if (type_index > 40) {
             throw std::runtime_error("Invalid type index provided");
         }
 
@@ -183,14 +133,30 @@ struct opts {
         } else {
             throw std::runtime_error("Invalid access pattern provided");
         }
+
+        loop_iterations = std::stoi(argv[7]);
     }
 };
 
 template <typename T>
-void simple_single(T& container) {
-    for (size_t i = 0; i < 1000; i++) {
+auto simple_op(T& t) -> decltype((void)(t *= 2)) {
+    t *= 2;
+}
+
+template <typename T>
+auto simple_op(T& t) -> decltype((void)(std::get<0>(t))) {
+    
+}
+
+void simple_op(std::string& s) {
+    s = s.substr(s.size() - 1) + s.substr(0, s.size());
+}
+
+template <typename T>
+void simple_single(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
         for (auto&& element : container) {
-            std::get<0>(element) *= 2;
+            simple_op(std::get<0>(element));
         } 
     }
 }
@@ -218,8 +184,8 @@ typename std::enable_if<std::is_floating_point<typename std::remove_reference<T>
 }
 
 template <typename T>
-void complex_single(T& container) {
-    for (size_t i = 0; i < 1000; i++) {
+void complex_single(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
         for (auto&& element : container) {
             complex_one_value_fn(std::get<0>(element));
         } 
@@ -227,8 +193,8 @@ void complex_single(T& container) {
 }
 
 template <typename T>
-void simple_independent(T& container) {
-    for (size_t i = 0; i < 1000; i++) {
+void simple_independent(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
         for (auto&& element : container) {
             tuple_for_each([](auto&& tuple_elem) {
                tuple_elem *= 2;
@@ -238,8 +204,8 @@ void simple_independent(T& container) {
 }
 
 template <typename T>
-void complex_independent(T& container) {
-    for (size_t i = 0; i < 1000; i++) {
+void complex_independent(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
         for (auto&& element : container) {
             tuple_for_each([](auto&& tuple_elem) {
 			   complex_one_value_fn(std::forward
@@ -274,8 +240,8 @@ void simple_combined_fn(T&& t) {
 }
 
 template <typename T>
-void simple_combined(T& container) {
-    for (size_t i = 0; i < 1000; i++) {
+void simple_combined(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
         for (auto&& element : container) {
             simple_combined_fn(std::forward<decltype(element)>(element));
         }
@@ -307,8 +273,8 @@ void complex_combined_fn(T&& t) {
 }
 
 template <typename T>
-void complex_combined(T& container) {
-    for (size_t i = 0; i < 1000; i++) {
+void complex_combined(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
         for (auto&& element : container) {
             complex_combined_fn(std::forward<decltype(element)>(element));
         }
@@ -322,25 +288,36 @@ void run_fn(opts& _opts) {
     if (_opts.fn == opts::_function::simple) {
         switch(_opts.ap) {
             case opts::access_pattern::single:
-                simple_single(container); 
+               
+                simple_single(container, _opts.loop_iterations); 
                 break;
             case opts::access_pattern::independent:
-                simple_independent(container); 
+                // simple_independent(container, _opts.loop_iterations); 
+
+                simple_single(container, _opts.loop_iterations); 
                 break;
             case opts::access_pattern::combined:
-                simple_combined(container);
+                //simple_combined(container, _opts.loop_iterations);
+
+                simple_single(container, _opts.loop_iterations); 
                 break;
         }
     } else {
         switch(_opts.ap) {
             case opts::access_pattern::single:
-                complex_single(container);
+               // complex_single(container, _opts.loop_iterations);
+               
+                simple_single(container, _opts.loop_iterations); 
                 break;
             case opts::access_pattern::independent:
-                complex_independent(container);
+                //complex_independent(container, _opts.loop_iterations);
+
+                simple_single(container, _opts.loop_iterations); 
                 break;
             case opts::access_pattern::combined:
-                complex_combined(container);
+                //complex_combined(container, _opts.loop_iterations);
+
+                simple_single(container, _opts.loop_iterations); 
                 break;
         } 
     }

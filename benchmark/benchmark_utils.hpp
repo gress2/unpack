@@ -143,7 +143,7 @@ struct opts {
     }
 };
 
-// SIMPLE OPS - 1 column
+// SIMPLE OPS - SINGLE / INDEPENDENT ELEMENT ACCESS
 
 template <typename T>
 auto simple_op(T& t) -> decltype((void)(t *= 2)) {
@@ -173,7 +173,27 @@ void simple_op(T&... t) {
     simple_op_helper(t...);
 }
 
-// COMPLEX OPS - 1 column
+template <typename T>
+void simple_single(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
+        for (auto&& element : container) {
+            simple_op(std::get<0>(element));
+        }
+    }
+}
+
+template <typename T>
+void simple_independent(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
+        for (auto&& element : container) {
+            tuple_for_each([](auto&& tuple_elem) {
+               simple_op(tuple_elem);
+            }, std::forward<decltype(element)>(element));
+        }
+    }
+}
+
+// COMPLEX OPS - SINGLE / INDEPENDENT ELEMENT ACCESS
 
 template <typename T> 
 typename std::enable_if<std::is_integral<typename std::remove_reference<T>::type>
@@ -220,7 +240,28 @@ void complex_op(T&... t) {
    complex_op_helper(t...); 
 }
 
-// SIMPLE OPS - combined columns
+template <typename T>
+void complex_single(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
+        for (auto&& element : container) {
+            complex_op(std::get<0>(element));
+        } 
+    }
+}
+
+template <typename T>
+void complex_independent(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
+        for (auto&& element : container) {
+            tuple_for_each([](auto&& tuple_elem) {
+			   complex_op(std::forward
+			       <decltype(tuple_elem)>(tuple_elem));
+            }, std::forward<decltype(element)>(element));
+        }
+    }
+}
+
+// SIMPLE OPS - COMBINED ELEMENT ACCESS
 
 double sum() {
     return 1;
@@ -246,6 +287,16 @@ void simple_combined_fn(T&& t) {
     }, std::forward<T>(t));
 }
 
+template <typename T>
+void simple_combined(T& container, size_t iterations) {
+    for (size_t i = 0; i < iterations; i++) {
+        for (auto&& element : container) {
+            simple_combined_fn(std::forward<decltype(element)>(element));
+        }
+    }
+}
+
+// COMPLEX OPS - COMBINED ELEMENT ACCESS
 
 double l4_norm() {
     return 0;
@@ -259,56 +310,6 @@ auto l4_norm(T&& t, Tail&&... tail) {
 template <typename T, size_t... Indices>
 auto complex_combined_fn_impl(T&& t, std::index_sequence<Indices...>) {
     return pow(l4_norm(std::get<Indices>(t)...), 1/4.0);
-}
-
-template <typename T>
-void simple_single(T& container, size_t iterations) {
-    for (size_t i = 0; i < iterations; i++) {
-        for (auto&& element : container) {
-            simple_op(std::get<0>(element));
-        }
-    }
-}
-
-template <typename T>
-void complex_single(T& container, size_t iterations) {
-    for (size_t i = 0; i < iterations; i++) {
-        for (auto&& element : container) {
-            complex_op(std::get<0>(element));
-        } 
-    }
-}
-
-template <typename T>
-void simple_independent(T& container, size_t iterations) {
-    for (size_t i = 0; i < iterations; i++) {
-        for (auto&& element : container) {
-            tuple_for_each([](auto&& tuple_elem) {
-               simple_op(tuple_elem);
-            }, std::forward<decltype(element)>(element));
-        }
-    }
-}
-
-template <typename T>
-void complex_independent(T& container, size_t iterations) {
-    for (size_t i = 0; i < iterations; i++) {
-        for (auto&& element : container) {
-            tuple_for_each([](auto&& tuple_elem) {
-			   complex_op(std::forward
-			       <decltype(tuple_elem)>(tuple_elem));
-            }, std::forward<decltype(element)>(element));
-        }
-    }
-}
-
-template <typename T>
-void simple_combined(T& container, size_t iterations) {
-    for (size_t i = 0; i < iterations; i++) {
-        for (auto&& element : container) {
-            simple_combined_fn(std::forward<decltype(element)>(element));
-        }
-    }
 }
 
 template <typename T>

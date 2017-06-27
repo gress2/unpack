@@ -19,6 +19,7 @@
 #include "unpack.hpp"
 #include "random_generator.hpp"
 #include "convert_to_numeric.hpp"
+#include "add_to_any.hpp"
 
 namespace unpack_benchmark
 {
@@ -75,6 +76,9 @@ using type1 = typename std::tuple<int, char, long, double>;
 using type2 = typename std::tuple<int, double, double>;
 using type3 = typename std::tuple<long, long, long>;
 using type4 = typename std::tuple<std::string, std::string>;
+using type5 = typename std::tuple<std::array<int, 10>>;
+using type6 = typename std::tuple<std::tuple<int, double>>;
+using type7 = typename std::tuple<std::vector<std::string>, std::string, char>;
 
 struct opts {
     enum data_structure { aos, soa };
@@ -154,7 +158,7 @@ auto simple_op(T& t) -> decltype((void)(std::get<0>(t))) {
 }
 
 void simple_op(std::string& s) {
-    s = s.substr(s.size() - 1) + s.substr(0, s.size());
+    s = s.substr(s.size() - 1) + s.substr(0, s.size() - 1);
 }
 
 template <typename T>
@@ -201,7 +205,7 @@ auto complex_op(T& t) -> decltype((void)(std::get<0>(t))) {
 } 
 
 void complex_op(std::string& s) {
-    s = s.substr(s.size() - 1) + s.substr(0, s.size());
+    s = s.substr(s.size() - 1) + s.substr(0, s.size() - 1);
 }
 
 template <typename T>
@@ -224,7 +228,7 @@ double sum() {
 
 template <typename T, typename... Tail>
 auto sum(T&& t, Tail&&... tail) {
-    return t + product(std::forward<Tail>(tail)...);
+    return convert(t) + sum(std::forward<Tail>(tail)...);
 }
 
 template <typename T, size_t... Indices>
@@ -237,10 +241,11 @@ void simple_combined_fn(T&& t) {
     constexpr auto size = std::tuple_size<typename std::remove_reference<T>::type>{};
     auto fn_res = simple_combined_fn_impl(std::forward<T>(t), 
                     std::make_index_sequence<size>{}); 
-    tuple_for_each([&fn_res](auto&& tuple_elem) {
-        tuple_elem += fn_res;
+    tuple_for_each([&fn_res](auto& tuple_elem) {
+        add_to_any(fn_res, tuple_elem);
     }, std::forward<T>(t));
 }
+
 
 double l4_norm() {
     return 0;
@@ -248,7 +253,7 @@ double l4_norm() {
 
 template <typename T, typename... Tail>
 auto l4_norm(T&& t, Tail&&... tail) {
-    return pow(std::forward<T>(t), 4) + l4_norm(std::forward<Tail>(tail)...);
+    return pow(convert(std::forward<T>(t)), 4) + l4_norm(std::forward<Tail>(tail)...);
 }
 
 template <typename T, size_t... Indices>
@@ -261,7 +266,7 @@ void simple_single(T& container, size_t iterations) {
     for (size_t i = 0; i < iterations; i++) {
         for (auto&& element : container) {
             simple_op(std::get<0>(element));
-        } 
+        }
     }
 }
 
@@ -312,7 +317,7 @@ void complex_combined_fn(T&& t) {
     auto fn_res = complex_combined_fn_impl(std::forward<T>(t), 
                     std::make_index_sequence<size>{}); 
     tuple_for_each([&fn_res](auto&& tuple_elem) {
-        tuple_elem += fn_res;
+        add_to_any(fn_res, tuple_elem);
     }, std::forward<T>(t));
 }
 
@@ -338,7 +343,7 @@ void run_fn(opts& _opts) {
                 simple_independent(container, _opts.loop_iterations); 
                 break;
             case opts::access_pattern::combined:
-                //simple_combined(container, _opts.loop_iterations);
+                simple_combined(container, _opts.loop_iterations);
                 break;
         }
     } else {
@@ -350,7 +355,7 @@ void run_fn(opts& _opts) {
                 complex_independent(container, _opts.loop_iterations);
                 break;
             case opts::access_pattern::combined:
-                //complex_combined(container, _opts.loop_iterations);
+                complex_combined(container, _opts.loop_iterations);
                 break;
         } 
     }
@@ -409,6 +414,15 @@ void run_benchmark(opts& _opts) {
             break;
         case 4:
             dispatch<type_map<type4>>(_opts);
+            break;
+        case 5:
+            dispatch<type_map<type5>>(_opts);
+            break;
+        case 6:
+            dispatch<type_map<type6>>(_opts);
+            break;
+        case 7:
+            dispatch<type_map<type7>>(_opts);
             break;
     }
 }

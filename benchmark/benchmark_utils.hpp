@@ -40,20 +40,6 @@ void fill_container_randomly(
     }
 }
 
-// Benchmark a function
-template <class F, class... Args>
-double benchmark(F&& f, Args&&... args)
-{
-    typename std::chrono::high_resolution_clock::time_point tbegin;
-    typename std::chrono::high_resolution_clock::time_point tend;
-    std::chrono::duration<double> duration;
-    tbegin = std::chrono::high_resolution_clock::now();
-    std::forward<F>(f)(std::forward<Args>(args)...);
-    tend = std::chrono::high_resolution_clock::now();
-    duration = tend - tbegin;
-    return duration.count();
-}
-
 // Check the bytes of the result
 template <class It>
 unsigned char check_bytes(It first, It last) {
@@ -332,10 +318,10 @@ void complex_combined(T& container, size_t iterations) {
 }
 
 template <typename T, typename F>
-void run_fn(opts& _opts, F& resume_timing) {
+void run_fn(opts& _opts, F& start_timing) {
     T container(_opts.container_size);
     fill_container_randomly(container.begin(), container.end());
-    resume_timing();
+    start_timing();
     if (_opts.fn == opts::_function::simple) {
         switch(_opts.ap) {
             case opts::access_pattern::single:
@@ -374,58 +360,58 @@ struct type_map {
 };
 
 template <typename T, typename F>
-void dispatch(opts& _opts, F& resume_timing) {
+void dispatch(opts& _opts, F& start_timing) {
    switch (_opts.ct) {
        case opts::container_type::vector:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn<typename T::vector_aos>(_opts, resume_timing);
+               run_fn<typename T::vector_aos>(_opts, start_timing);
            } else {
-               run_fn<typename T::vector_soa>(_opts, resume_timing);
+               run_fn<typename T::vector_soa>(_opts, start_timing);
            }
            break;
        case opts::container_type::list:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn<typename T::list_aos>(_opts, resume_timing);
+               run_fn<typename T::list_aos>(_opts, start_timing);
            } else {
-               run_fn<typename T::list_soa>(_opts, resume_timing);
+               run_fn<typename T::list_soa>(_opts, start_timing);
            }
            break;
        case opts::container_type::deque:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn<typename T::deque_aos>(_opts, resume_timing);
+               run_fn<typename T::deque_aos>(_opts, start_timing);
            } else {
-               run_fn<typename T::deque_soa>(_opts, resume_timing);
+               run_fn<typename T::deque_soa>(_opts, start_timing);
            }
            break;
    }
 }
 
 template <typename F>
-void run_benchmark(opts& _opts, F& resume_timing) {
+void run_benchmark(opts& _opts, F& start_timing) {
     switch (_opts.type_index) {
         case 0:
-            dispatch<type_map<type0>>(_opts, resume_timing);
+            dispatch<type_map<type0>>(_opts, start_timing);
             break;
         case 1:
-            dispatch<type_map<type1>>(_opts, resume_timing);
+            dispatch<type_map<type1>>(_opts, start_timing);
             break;
         case 2:
-            dispatch<type_map<type2>>(_opts, resume_timing);
+            dispatch<type_map<type2>>(_opts, start_timing);
             break;
         case 3:
-            dispatch<type_map<type3>>(_opts, resume_timing);
+            dispatch<type_map<type3>>(_opts, start_timing);
             break;
         case 4:
-            dispatch<type_map<type4>>(_opts, resume_timing);
+            dispatch<type_map<type4>>(_opts, start_timing);
             break;
         case 5:
-            dispatch<type_map<type5>>(_opts, resume_timing);
+            dispatch<type_map<type5>>(_opts, start_timing);
             break;
         case 6:
-            dispatch<type_map<type6>>(_opts, resume_timing);
+            dispatch<type_map<type6>>(_opts, start_timing);
             break;
         case 7:
-            dispatch<type_map<type7>>(_opts, resume_timing);
+            dispatch<type_map<type7>>(_opts, start_timing);
             break;
     }
 }

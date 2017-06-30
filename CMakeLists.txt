@@ -19,6 +19,28 @@ set ( CMAKE_RUNTIME_OUTPUT_DIRECTORY_RELEASE "${CMAKE_CURRENT_BINARY_DIR}/Releas
 
 set ( CMAKE_CXX_FLAGS_RELEASE "-Wall -O3" )
 
+option (O0 "O0" OFF)
+option (O1 "O1" OFF)
+option (O2 "O2" OFF)
+option (O3 "O3" OFF)
+option (Ofast "Ofast" OFF)
+
+if ( O0 )
+    set ( CMAKE_CXX_FLAGS_RELEASE "-Wall -O0" )
+endif( O0 )
+if ( O1 )
+    set ( CMAKE_CXX_FLAGS_RELEASE "-Wall -O1" )
+endif( O1 )
+if ( O2 )
+    set ( CMAKE_CXX_FLAGS_RELEASE "-Wall -O2" )
+endif( O2 )
+if ( O3 )
+    set ( CMAKE_CXX_FLAGS_RELEASE "-Wall -O3" )
+endif( O3 )
+if ( Ofast )
+    set ( CMAKE_CXX_FLAGS_RELEASE "-Wall -Ofast" )
+endif( Ofast )
+
 include_directories (
     "${CMAKE_CURRENT_SOURCE_DIR}/include"
 )

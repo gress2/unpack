@@ -20,6 +20,7 @@
 #include "random_generator.hpp"
 #include "convert_to_numeric.hpp"
 #include "add_to_any.hpp"
+#include "repeat_type_tuple.hpp"
 
 namespace unpack_benchmark
 {
@@ -57,15 +58,6 @@ unsigned char check_bytes(It first, It last) {
     return std::accumulate(first, last, byte, accumulator);
 }
 
-using type0 = typename std::tuple<int>;
-using type1 = typename std::tuple<int, char, long, double>;
-using type2 = typename std::tuple<int, double, double>;
-using type3 = typename std::tuple<long, long, long>;
-using type4 = typename std::tuple<std::string, std::string>;
-using type5 = typename std::tuple<std::array<int, 10>>;
-using type6 = typename std::tuple<std::tuple<int, double>>;
-using type7 = typename std::tuple<std::vector<std::string>, std::string, char>;
-
 struct opts {
     enum data_structure { aos, soa };
     enum access_pattern { independent, single, combined };
@@ -80,7 +72,7 @@ struct opts {
     access_pattern ap;
     size_t loop_iterations;
 
-    // example: ./Release/bin/unpack_benchmark soa vector 1000000 1 simple independent
+    // example: ./Release/bin/unpack_chrono_benchmark soa vector 1000000 1 simple independent 100
     opts(char* argv[]) {
         if (strncmp(argv[1], "aos", 3) == 0) {
             ds = opts::data_structure::aos;
@@ -211,7 +203,8 @@ auto complex_op(T& t) -> decltype((void)(std::get<0>(t))) {
 } 
 
 void complex_op(std::string& s) {
-    s = s.substr(s.size() - 1) + s.substr(0, s.size() - 1);
+    std::hash<std::string> hash_fn;
+    s = std::to_string(hash_fn(s)).substr(0, 15); 
 }
 
 template <typename T>
@@ -388,6 +381,25 @@ void dispatch(opts& _opts, F& start_timing) {
 
 template <typename F>
 void run_benchmark(opts& _opts, F& start_timing) {
+    using type0 = typename std::tuple<double>;
+    using type1 = typename std::tuple<int, char, long, double>;
+    using type2 = typename std::tuple<int, double, double>;
+    using type3 = typename std::tuple<long, long, long>;
+    using type4 = typename std::tuple<std::string, std::string>;
+    using type5 = typename std::tuple<std::array<int, 10>>;
+    using type6 = typename std::tuple<std::tuple<int, double>>;
+    using type7 = typename std::tuple<std::vector<std::string>, std::string, char>;
+    using type8 = typename repeat_type_tuple<int, 1>::type;
+    using type9 = typename repeat_type_tuple<int, 2>::type;
+    using type10 = typename repeat_type_tuple<int, 3>::type;
+    using type11 = typename repeat_type_tuple<int, 4>::type;
+    using type12 = typename repeat_type_tuple<int, 5>::type;
+    using type13 = typename repeat_type_tuple<int, 6>::type;
+    using type14 = typename repeat_type_tuple<int, 7>::type;
+    using type15 = typename repeat_type_tuple<int, 8>::type;
+    using type16 = typename repeat_type_tuple<int, 9>::type;
+    using type17 = typename repeat_type_tuple<int, 10>::type;
+
     switch (_opts.type_index) {
         case 0:
             dispatch<type_map<type0>>(_opts, start_timing);
@@ -412,6 +424,36 @@ void run_benchmark(opts& _opts, F& start_timing) {
             break;
         case 7:
             dispatch<type_map<type7>>(_opts, start_timing);
+            break;
+        case 8:
+            dispatch<type_map<type8>>(_opts, start_timing);
+            break;
+        case 9:
+            dispatch<type_map<type9>>(_opts, start_timing);
+            break;           
+        case 10:
+            dispatch<type_map<type10>>(_opts, start_timing);
+            break;
+        case 11:
+            dispatch<type_map<type11>>(_opts, start_timing);
+            break;
+        case 12:
+            dispatch<type_map<type12>>(_opts, start_timing);
+            break;
+        case 13:
+            dispatch<type_map<type13>>(_opts, start_timing);
+            break;
+        case 14:
+            dispatch<type_map<type14>>(_opts, start_timing);
+            break;
+        case 15:
+            dispatch<type_map<type15>>(_opts, start_timing);
+            break;
+        case 16:
+            dispatch<type_map<type16>>(_opts, start_timing);
+            break;
+        case 17:
+            dispatch<type_map<type17>>(_opts, start_timing);
             break;
     }
 }

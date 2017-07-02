@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
         tbegin = std::chrono::high_resolution_clock::now();
     };
 
-    unpack_benchmark::run_benchmark(o, start_timing);
+    std::cout << unpack_benchmark::run_benchmark(o, start_timing) << std::endl;
     tend = std::chrono::high_resolution_clock::now();
     duration = tend - tbegin;
     std::cout << duration.count() << std::endl;

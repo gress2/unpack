@@ -311,7 +311,7 @@ void complex_combined(T& container, size_t iterations) {
 }
 
 template <typename T, typename F>
-void run_fn(opts& _opts, F& start_timing) {
+unsigned char run_fn(opts& _opts, F& start_timing) {
     T container(_opts.container_size);
     fill_container_randomly(container.begin(), container.end());
     start_timing();
@@ -340,6 +340,7 @@ void run_fn(opts& _opts, F& start_timing) {
                 break;
         } 
     }
+    return check_bytes(container.begin(), container.end());
 }
 
 template <typename T>
@@ -353,34 +354,36 @@ struct type_map {
 };
 
 template <typename T, typename F>
-void dispatch(opts& _opts, F& start_timing) {
+unsigned char dispatch(opts& _opts, F& start_timing) {
    switch (_opts.ct) {
        case opts::container_type::vector:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn<typename T::vector_aos>(_opts, start_timing);
+               return run_fn<typename T::vector_aos>(_opts, start_timing);
            } else {
-               run_fn<typename T::vector_soa>(_opts, start_timing);
+               return run_fn<typename T::vector_soa>(_opts, start_timing);
            }
            break;
        case opts::container_type::list:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn<typename T::list_aos>(_opts, start_timing);
+               return run_fn<typename T::list_aos>(_opts, start_timing);
            } else {
-               run_fn<typename T::list_soa>(_opts, start_timing);
+               return run_fn<typename T::list_soa>(_opts, start_timing);
            }
            break;
        case opts::container_type::deque:
            if (_opts.ds == opts::data_structure::aos) {
-               run_fn<typename T::deque_aos>(_opts, start_timing);
+               return run_fn<typename T::deque_aos>(_opts, start_timing);
            } else {
-               run_fn<typename T::deque_soa>(_opts, start_timing);
+               return run_fn<typename T::deque_soa>(_opts, start_timing);
            }
            break;
+       default:
+           return 'x';
    }
 }
 
 template <typename F>
-void run_benchmark(opts& _opts, F& start_timing) {
+unsigned char run_benchmark(opts& _opts, F& start_timing) {
     using type0 = typename std::tuple<double>;
     using type1 = typename std::tuple<int, char, long, double>;
     using type2 = typename std::tuple<int, double, double>;
@@ -402,59 +405,61 @@ void run_benchmark(opts& _opts, F& start_timing) {
 
     switch (_opts.type_index) {
         case 0:
-            dispatch<type_map<type0>>(_opts, start_timing);
+            return dispatch<type_map<type0>>(_opts, start_timing);
             break;
         case 1:
-            dispatch<type_map<type1>>(_opts, start_timing);
+            return dispatch<type_map<type1>>(_opts, start_timing);
             break;
         case 2:
-            dispatch<type_map<type2>>(_opts, start_timing);
+            return dispatch<type_map<type2>>(_opts, start_timing);
             break;
         case 3:
-            dispatch<type_map<type3>>(_opts, start_timing);
+            return dispatch<type_map<type3>>(_opts, start_timing);
             break;
         case 4:
-            dispatch<type_map<type4>>(_opts, start_timing);
+            return dispatch<type_map<type4>>(_opts, start_timing);
             break;
         case 5:
-            dispatch<type_map<type5>>(_opts, start_timing);
+            return dispatch<type_map<type5>>(_opts, start_timing);
             break;
         case 6:
-            dispatch<type_map<type6>>(_opts, start_timing);
+            return dispatch<type_map<type6>>(_opts, start_timing);
             break;
         case 7:
-            dispatch<type_map<type7>>(_opts, start_timing);
+            return dispatch<type_map<type7>>(_opts, start_timing);
             break;
         case 8:
-            dispatch<type_map<type8>>(_opts, start_timing);
+            return dispatch<type_map<type8>>(_opts, start_timing);
             break;
         case 9:
-            dispatch<type_map<type9>>(_opts, start_timing);
+            return dispatch<type_map<type9>>(_opts, start_timing);
             break;           
         case 10:
-            dispatch<type_map<type10>>(_opts, start_timing);
+            return dispatch<type_map<type10>>(_opts, start_timing);
             break;
         case 11:
-            dispatch<type_map<type11>>(_opts, start_timing);
+            return dispatch<type_map<type11>>(_opts, start_timing);
             break;
         case 12:
-            dispatch<type_map<type12>>(_opts, start_timing);
+            return dispatch<type_map<type12>>(_opts, start_timing);
             break;
         case 13:
-            dispatch<type_map<type13>>(_opts, start_timing);
+            return dispatch<type_map<type13>>(_opts, start_timing);
             break;
         case 14:
-            dispatch<type_map<type14>>(_opts, start_timing);
+            return dispatch<type_map<type14>>(_opts, start_timing);
             break;
         case 15:
-            dispatch<type_map<type15>>(_opts, start_timing);
+            return dispatch<type_map<type15>>(_opts, start_timing);
             break;
         case 16:
-            dispatch<type_map<type16>>(_opts, start_timing);
+            return dispatch<type_map<type16>>(_opts, start_timing);
             break;
         case 17:
-            dispatch<type_map<type17>>(_opts, start_timing);
+            return dispatch<type_map<type17>>(_opts, start_timing);
             break;
+        default:
+            return 'x'; 
     }
 }
 

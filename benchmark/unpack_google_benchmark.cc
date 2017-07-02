@@ -6,7 +6,7 @@ static void DoBenchmark(benchmark::State& state, unpack_benchmark::opts o) {
     while (state.KeepRunning()) {
         state.PauseTiming();
         auto start_timing = [&state]() { state.ResumeTiming(); };
-        unpack_benchmark::run_benchmark(o, start_timing);
+        std::cout << unpack_benchmark::run_benchmark(o, start_timing) << std::endl;
     }
 }
 

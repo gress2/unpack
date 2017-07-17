@@ -1,0 +1,14 @@
+{
+  "executable": "",
+  "database": {
+    "url": "",
+    "schema": ""  
+  },
+  "compiler": "",
+  "optimization": "",
+  "system": {
+    "os": "",
+    "processor": "",
+    "memory": ""
+  }
+}

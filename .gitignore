@@ -1,2 +1,6 @@
 build
 Makefile
+.vscode
+**/*.pyc
+**/*.swo
+**/*.swp

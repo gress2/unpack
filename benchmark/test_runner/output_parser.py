@@ -1,12 +1,9 @@
 def parse_benchmark(rawString):
-    print rawString
-
+    return rawString
 def parse_chrono_benchmark(rawString):
-    print rawString
-
+    return 2
 def parse_google_benchmark(rawString):
-    print rawString
-
+    return 3
 class OutputParser:
     parse = None
     def __init__(self, executable):

@@ -1,9 +1,8 @@
 {
   "executable": "",
-  "database": {
-    "url": "",
-    "schema": ""  
-  },
+  "db": "",
+  "db_cluster": "",
+  "db_collection": "", 
   "compiler": "",
   "optimization": "",
   "system": {

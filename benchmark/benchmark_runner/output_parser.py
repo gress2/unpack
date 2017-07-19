@@ -1,9 +1,19 @@
 def parse_benchmark(rawString):
-    return rawString
+    contentAry = rawString.split()
+    for idx in range(len(contentAry)):
+        if contentAry[idx] == 'real':
+            return float(contentAry[idx - 1])
+
 def parse_chrono_benchmark(rawString):
-    return 2
+    contentAry = rawString.split()
+    return float(contentAry[1])
+
 def parse_google_benchmark(rawString):
-    return 3
+    contentAry = rawString.split()
+    aryLen = len(contentAry)
+    # total run time / iterations / 1billion (to get seconds from nanoseconds)
+    return (float(contentAry[aryLen - 5]) / float(contentAry[aryLen - 1])) / 1e9
+
 class OutputParser:
     parse = None
     def __init__(self, executable):

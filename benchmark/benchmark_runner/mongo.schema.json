@@ -1,0 +1,18 @@
+{
+  "access_pattern": "",
+  "benchmarking_tool": "",
+  "compiler": "",
+  "complexity": "",
+  "container": "",
+  "container_size": 0,
+  "iterations": 0,
+  "optimization": "",
+  "orientation": "",
+  "system": {
+    "os": "",
+    "processor": "",
+    "memory": ""
+  },
+  "timing": 0,
+  "type_index": 0
+}

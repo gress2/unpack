@@ -4,14 +4,14 @@ import subprocess
 import sys
 
 from output_parser import OutputParser
-from output_writer import OutputWriter
+from db_writer import DBWriter
 
 with open('run_config.json') as run_config_f:
     run_config = json.load(run_config_f)
 
 executable = run_config["executable"]
 parser = OutputParser(executable)
-writer = OutputWriter(run_config)
+writer = DBWriter(run_config)
 
 data_layout = ["aos", "soa"]
 container = ["vector"]
@@ -28,6 +28,6 @@ for combination in itertools.product(*parameter_space): # ~17k
     args = list(combination)
     if "unpack_benchmark" in executable:
         args.insert(0, "time")
-    res = subprocess.check_output(args, stderr=subprocess.STDOUT) 
-    print parser.parse(res)
+    timing = parser.parse(subprocess.check_output(args, stderr=subprocess.STDOUT))
+    writer.write(combination, timing)
 

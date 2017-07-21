@@ -27,8 +27,7 @@ iterations = [str(2**x) for x in range(20)]
 
 parameter_space = [[executable], data_layout, container, container_size, type_index,
         operation_complexity, access_pattern, iterations]
-
-for combination in itertools.product(*parameter_space): # ~17k
+for combination in itertools.product(*parameter_space): 
     type = typemap[int(combination[4])]
     if (type["length"] * int(combination[3]) * int(combination[7]) > 1e8):
         continue
@@ -37,4 +36,3 @@ for combination in itertools.product(*parameter_space): # ~17k
         args.insert(0, "time")
     timing = parser.parse(subprocess.check_output(args, stderr=subprocess.STDOUT))
     writer.write(combination, timing)
-

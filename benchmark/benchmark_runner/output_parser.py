@@ -6,7 +6,7 @@ def parse_benchmark(rawString):
 
 def parse_chrono_benchmark(rawString):
     contentAry = rawString.split()
-    return float(contentAry[1])
+    return float(contentAry[len(contentAry) - 1])
 
 def parse_google_benchmark(rawString):
     contentAry = rawString.split()

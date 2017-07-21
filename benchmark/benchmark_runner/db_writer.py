@@ -31,6 +31,9 @@ class DBWriter:
             "timing": timing,
             "type_index": run_params[4]
         }
-        print entry
+        print "type_index: " + entry["type_index"] + " orientation: " + entry["orientation"] + \
+                " complexity: " + entry["complexity"] + " access_pattern: " + entry["access_pattern"] + \
+                " container_sz: " + entry["container_size"] + " iterations: " + str(entry["iterations"]) + \
+                " timing: " + str(entry["timing"])
         self.collection.insert_one(entry)
 

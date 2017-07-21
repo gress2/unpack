@@ -136,7 +136,11 @@ auto simple_op(T& t) -> decltype((void)(std::get<0>(t))) {
 }
 
 void simple_op(std::string& s) {
-    s = s.substr(s.size() - 1) + s.substr(0, s.size() - 1);
+    if (s.length() % 2 == 0) {
+      s.insert(0, 1, 'x');
+    } else {
+      s.pop_back();
+    }
 }
 
 template <typename T>
@@ -176,17 +180,7 @@ void simple_independent(T& container, size_t iterations) {
 template <typename T> 
 typename std::enable_if<std::is_integral<typename std::remove_reference<T>::type>
              ::value>::type complex_op(T& t) {
-	if (t != 2) {
-        if (t < 2 || t % 2 == 0) {
-            t *= 2;
-        }
-        for (int i = 3; (i * i) <= t; i += 2){
-            if (t % i == 0 ) {
-                t *= 2;
-            }
-        }
-    }
-    t *= 4;    
+    t += sqrt(t);
 }
 
 template <typename T> 
@@ -204,7 +198,11 @@ auto complex_op(T& t) -> decltype((void)(std::get<0>(t))) {
 
 void complex_op(std::string& s) {
     std::hash<std::string> hash_fn;
-    s = std::to_string(hash_fn(s)).substr(0, 15); 
+    if (hash_fn(s) % 2 == 0) {
+      s.insert(0, 1, 'x');
+    } else {
+      s.pop_back();
+    }
 }
 
 template <typename T>
@@ -384,24 +382,11 @@ unsigned char dispatch(opts& _opts, F& start_timing) {
 
 template <typename F>
 unsigned char run_benchmark(opts& _opts, F& start_timing) {
-    using type0 = typename std::tuple<double>;
-    using type1 = typename std::tuple<int, char, long, double>;
-    using type2 = typename std::tuple<int, double, double>;
-    using type3 = typename std::tuple<long, long, long>;
-    using type4 = typename std::tuple<std::string, std::string>;
-    using type5 = typename std::tuple<std::array<int, 10>>;
-    using type6 = typename std::tuple<std::tuple<int, double>>;
-    using type7 = typename std::tuple<std::vector<std::string>, std::string, char>;
-    using type8 = typename repeat_type_tuple<int, 1>::type;
-    using type9 = typename repeat_type_tuple<int, 2>::type;
-    using type10 = typename repeat_type_tuple<int, 3>::type;
-    using type11 = typename repeat_type_tuple<int, 4>::type;
-    using type12 = typename repeat_type_tuple<int, 5>::type;
-    using type13 = typename repeat_type_tuple<int, 6>::type;
-    using type14 = typename repeat_type_tuple<int, 7>::type;
-    using type15 = typename repeat_type_tuple<int, 8>::type;
-    using type16 = typename repeat_type_tuple<int, 9>::type;
-    using type17 = typename repeat_type_tuple<int, 10>::type;
+    using type0 = typename std::tuple<char>;
+    using type1 = typename std::tuple<int>;
+    using type2 = typename std::tuple<double, double>;
+    using type3 = typename repeat_type_tuple<double, 16>::type;
+    using type4 = typename std::tuple<char, int, std::string, double>;
 
     switch (_opts.type_index) {
         case 0:
@@ -419,6 +404,7 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
         case 4:
             return dispatch<type_map<type4>>(_opts, start_timing);
             break;
+        /*
         case 5:
             return dispatch<type_map<type5>>(_opts, start_timing);
             break;
@@ -457,7 +443,7 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
             break;
         case 17:
             return dispatch<type_map<type17>>(_opts, start_timing);
-            break;
+            break;*/
         default:
             return 'x'; 
     }

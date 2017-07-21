@@ -1,0 +1,29 @@
+{
+  "types": [
+    {
+      "type": "std::tuple<char>",
+      "length": 1 
+    },
+    {
+      "type": "std::tuple<int>",
+      "length": 1
+    },
+    {
+      "type": "std::tuple<double,double>",
+      "length": 2
+    },
+    {
+      "type": "std::tuple<double,double,double,double,double,double,double,double,double,double,double,double,double,double,double,double>",
+      "length": 16
+    },
+    {
+      "type": "std::tuple<char,int,std::string,double>",
+      "length": 4
+    },
+    {
+      "type": "std::tuple<std::string,std::string>",
+      "length": 2
+    }
+  ]
+}
+

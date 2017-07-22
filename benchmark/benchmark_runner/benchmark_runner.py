@@ -2,10 +2,10 @@ import itertools
 import json
 import subprocess
 import sys
-from tempfile import NamedTemporaryFile
 
+from file_writer import FileWriter
+from json_builder import JSONBuilder
 from output_parser import OutputParser
-from db_writer import DBWriter
 
 with open('run_config.json') as run_config_f:
     run_config = json.load(run_config_f)
@@ -15,14 +15,20 @@ with open('typemap.json') as typemap_f:
 
 executable = run_config["executable"]
 parser = OutputParser(executable)
-writer = DBWriter(run_config)
+json_builder = JSONBuilder(run_config)
+
+if run_config["write_mode"] == "db":
+    from db_writer import DBWriter 
+    writer = DBWriter(run_config)
+if run_config["write_mode"] == "file":
+    writer = FileWriter(run_config)
 
 data_layout = ["aos", "soa"]
 container = ["vector"]
-container_size = [str(x) for x in [2**0, 2**10, 2**20]]
-type_index = [str(x) for x in range(5)]
-operation_complexity = ["simple", "complex"]
-access_pattern = ["single", "independent", "combined"]
+container_size = [str(x) for x in [2**10]]
+type_index = [str(x) for x in [4]]
+operation_complexity = ["simple"]
+access_pattern = ["single"]
 iterations = [str(2**x) for x in range(20)]
 
 parameter_space = [[executable], data_layout, container, container_size, type_index,
@@ -35,4 +41,5 @@ for combination in itertools.product(*parameter_space):
     if "unpack_benchmark" in executable:
         args.insert(0, "time")
     timing = parser.parse(subprocess.check_output(args, stderr=subprocess.STDOUT))
-    writer.write(combination, timing)
+    entry = json_builder.build(combination, timing, type["type"])
+    writer.write(entry)

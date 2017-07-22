@@ -136,11 +136,8 @@ auto simple_op(T& t) -> decltype((void)(std::get<0>(t))) {
 }
 
 void simple_op(std::string& s) {
-    if (s.length() % 2 == 0) {
-      s.insert(0, 1, 'x');
-    } else {
-      s.pop_back();
-    }
+    s.insert(0, 1, 'x');
+    s.pop_back();
 }
 
 template <typename T>
@@ -387,6 +384,7 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
     using type2 = typename std::tuple<double, double>;
     using type3 = typename repeat_type_tuple<double, 16>::type;
     using type4 = typename std::tuple<char, int, std::string, double>;
+    using type5 = typename std::tuple<std::vector<int>>;
 
     switch (_opts.type_index) {
         case 0:
@@ -404,10 +402,10 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
         case 4:
             return dispatch<type_map<type4>>(_opts, start_timing);
             break;
-        /*
         case 5:
             return dispatch<type_map<type5>>(_opts, start_timing);
             break;
+        /*
         case 6:
             return dispatch<type_map<type6>>(_opts, start_timing);
             break;

@@ -78,11 +78,27 @@ struct random_generator {
             }, t); 
         }
         template <typename T>
-        void gen_helper(T& t) {
-            for(auto it = t.begin(); it != t.end(); ++it) {
+        auto gen_helper(T& t) -> decltype(t.resize(3)) {
+            if (t.size() == 0) {
+              t.resize(3);
+            }
+            for (auto it = t.begin(); it != t.end(); ++it) {
                 generate(*it);
             }
         }
+
+        template <typename T>
+        void gen_helper_helper(T& t) {
+            for (auto it = t.begin(); it != t.end(); ++it) {
+                generate(*it);  
+            }
+        }
+
+        template <typename... T>
+        void gen_helper(T&... t) {
+            gen_helper_helper(t...);
+        }
+
         template <typename...T>
         void generate(T&... t) {
             gen_helper(t...);

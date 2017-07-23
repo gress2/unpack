@@ -1,5 +1,7 @@
 {
   "executable": "",
+  "write_mode": "", 
+  "file_target": "",
   "db": "",
   "db_cluster": "",
   "db_collection": "", 

@@ -7,7 +7,13 @@
 
 template <typename T>
 void add_to_any(T&& t, std::string&s) {
-    s += std::to_string(std::forward<T>(t));
+    if (static_cast<int>(t) % 2 == 0) {
+      s.insert(0, 1, 'x');
+      s.pop_back();
+    } else {
+      s.insert(0, 1, 'y');
+      s.pop_back();
+    } 
 } 
 
 template <typename T, typename U>

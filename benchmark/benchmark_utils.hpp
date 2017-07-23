@@ -58,6 +58,15 @@ unsigned char check_bytes(It first, It last) {
     return std::accumulate(first, last, byte, accumulator);
 }
 
+template <int N, class T>
+constexpr T _pow(const T& x)
+{
+		return N > 1 ? x * _pow<(N - 1) * (N > 1)>(x)
+                 : N < 0 ? T(1) / _pow<(-N) * (N < 0)>(x)
+                         : N == 1 ? x
+                                  : T(1);
+}
+
 struct opts {
     enum data_structure { aos, soa };
     enum access_pattern { independent, single, combined };
@@ -177,13 +186,13 @@ void simple_independent(T& container, size_t iterations) {
 template <typename T> 
 typename std::enable_if<std::is_integral<typename std::remove_reference<T>::type>
              ::value>::type complex_op(T& t) {
-    t += sqrt(t);
+    t += _pow<50>(t) % 50;
 }
 
 template <typename T> 
 typename std::enable_if<std::is_floating_point<typename std::remove_reference<T>::type>
              ::value>::type complex_op(T& t) {
-    t = cos(t) + sin(t) + tan(t);		
+    t = cos(t);		
 }
 
 template <typename T>
@@ -278,12 +287,12 @@ double l4_norm() {
 
 template <typename T, typename... Tail>
 auto l4_norm(T&& t, Tail&&... tail) {
-    return pow(convert(std::forward<T>(t)), 4) + l4_norm(std::forward<Tail>(tail)...);
+    return pow(convert(std::forward<T>(t)), 4 + cos(convert(std::forward<T>(t)))) + l4_norm(std::forward<Tail>(tail)...);
 }
 
 template <typename T, size_t... Indices>
 auto complex_combined_fn_impl(T&& t, std::index_sequence<Indices...>) {
-    return pow(l4_norm(std::get<Indices>(t)...), 1/4.0);
+    return cos(std::log(sin(l4_norm(std::get<Indices>(t)...))));
 }
 
 template <typename T>
@@ -385,6 +394,11 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
     using type3 = typename repeat_type_tuple<double, 16>::type;
     using type4 = typename std::tuple<char, int, std::string, double>;
     using type5 = typename std::tuple<std::vector<int>>;
+    using type6 = typename repeat_type_tuple<int, 4>::type;
+    using type7 = typename repeat_type_tuple<double, 4>::type;
+    using type8 = typename repeat_type_tuple<std::string, 4>::type;
+    using type9 = typename std::tuple<std::vector<int>, std::vector<double>>;
+    using type10 = typename std::tuple<int,double,std::string,std::vector<int>>;
 
     switch (_opts.type_index) {
         case 0:
@@ -405,7 +419,6 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
         case 5:
             return dispatch<type_map<type5>>(_opts, start_timing);
             break;
-        /*
         case 6:
             return dispatch<type_map<type6>>(_opts, start_timing);
             break;
@@ -421,6 +434,7 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
         case 10:
             return dispatch<type_map<type10>>(_opts, start_timing);
             break;
+        /*
         case 11:
             return dispatch<type_map<type11>>(_opts, start_timing);
             break;

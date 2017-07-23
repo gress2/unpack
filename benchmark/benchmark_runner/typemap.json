@@ -23,6 +23,26 @@
     {
       "type": "std::tuple<std::string,std::string>",
       "length": 2
+    },
+    {
+      "type": "std::tuple<int,int,int,int>",
+      "length": 4
+    },
+    {
+      "type": "std::tuple<double,double,double,double>",
+      "length": 4
+    },
+    {
+      "type": "std::tuple<std::string,std::string,std::string,std::string>",
+      "length": 4
+    },
+    {
+      "type": "std::tuple<std::vector<int>,std::vector<double>>",
+      "length": 6
+    },
+    {
+      "type": "std::tuple<int,double,std::string,std::vector<int>>",
+      "length": 6 
     }
   ]
 }

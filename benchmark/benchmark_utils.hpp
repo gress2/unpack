@@ -4,6 +4,7 @@
 // Benchmarking unpacking strategies
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <chrono>
 #include <cmath>
 #include <deque>
@@ -134,7 +135,10 @@ struct opts {
 
 template <typename T>
 auto simple_op(T& t) -> decltype((void)(t *= 2)) {
-    t *= 2;
+    using type = typename std::remove_reference<decltype(t)>::type;
+    t *= std::is_floating_point<type>::value ? static_cast<type>(1.0000001) : 
+      -t * (t == std::numeric_limits<type>::max() - 1) + (t + 1) * 
+      (t != std::numeric_limits<type>::max() - 1);
 }
 
 template <typename T>
@@ -281,18 +285,19 @@ void simple_combined(T& container, size_t iterations) {
 
 // COMPLEX OPS - COMBINED ELEMENT ACCESS
 
-double l4_norm() {
+double strange_addition() {
     return 0;
 }
 
 template <typename T, typename... Tail>
-auto l4_norm(T&& t, Tail&&... tail) {
-    return pow(convert(std::forward<T>(t)), 4 + cos(convert(std::forward<T>(t)))) + l4_norm(std::forward<Tail>(tail)...);
+auto strange_addition(T&& t, Tail&&... tail) {
+    return pow(convert(std::forward<T>(t)), 4 + cos(convert(std::forward<T>(t)))) 
+      + strange_addition(std::forward<Tail>(tail)...);
 }
 
 template <typename T, size_t... Indices>
 auto complex_combined_fn_impl(T&& t, std::index_sequence<Indices...>) {
-    return cos(std::log(sin(l4_norm(std::get<Indices>(t)...))));
+    return cos(std::log(sin(strange_addition(std::get<Indices>(t)...))));
 }
 
 template <typename T>

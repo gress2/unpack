@@ -26,9 +26,9 @@ if run_config["write_mode"] == "file":
 data_layout = ["aos", "soa"]
 container = ["vector"]
 container_size = [str(x) for x in [2**0, 2**10, 2**20]]
-type_index = [str(x) for x in [10]]
-operation_complexity = ["simple", "complex"]
-access_pattern = ["combined"]
+type_index = [str(x) for x in [0,1,2,3,4]]
+operation_complexity = ["simple","complex"]
+access_pattern = ["single","independent","combined"]
 iterations = [str(2**x) for x in range(20)]
 
 parameter_space = [[executable], data_layout, container, container_size, type_index,
@@ -41,5 +41,6 @@ for combination in itertools.product(*parameter_space):
     if "unpack_benchmark" in executable:
         args.insert(0, "time")
     timing = parser.parse(subprocess.check_output(args, stderr=subprocess.STDOUT))
+     
     entry = json_builder.build(combination, timing, type["type"])
     writer.write(entry)

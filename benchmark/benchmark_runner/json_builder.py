@@ -6,7 +6,7 @@ class JSONBuilder:
         exc = run_config["executable"]
         if "unpack_benchmark" in exc:
             self.benchmarking_tool = "benchmark"
-        elif "Unpack_chrono_benchmark" in exc:
+        elif "unpack_chrono_benchmark" in exc:
             self.benchmarking_tool = "chrono_benchmark"
         elif "unpack_google_benchmark" in exc:
             self.benchmarking_tool = "google_benchmark"

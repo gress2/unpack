@@ -53,12 +53,13 @@ struct string_distribution {
 
 struct random_generator {
     private:
-		std::uniform_real_distribution<double> _real;
+	std::uniform_real_distribution<double> _real;
         std::uniform_int_distribution<std::size_t> _int;
         string_distribution _string;
         xorshift_engine _xe;
     public:
-        random_generator() : _xe(xorshift_engine(std::random_device()())) {}
+        random_generator() : _real(std::numeric_limits<float>::epsilon(), 1),
+                             _xe(std::random_device()()) {}
         template <typename T>
         void generate(T& t, typename std::enable_if<std::is_floating_point<T>::value>::type *q = nullptr) {
             t = _real(_xe);

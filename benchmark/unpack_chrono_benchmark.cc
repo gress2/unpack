@@ -6,19 +6,19 @@
 #include "unpack.hpp"
 
 int main(int argc, char* argv[]) {
-    assert(argc == 8);
-    unpack_benchmark::opts o(argv);
+  assert(argc == 8);
+  unpack_benchmark::opts o(argv);
 
-    typename std::chrono::high_resolution_clock::time_point tbegin;
-    typename std::chrono::high_resolution_clock::time_point tend;
-    std::chrono::duration<double> duration;
+  typename std::chrono::high_resolution_clock::time_point tbegin;
+  typename std::chrono::high_resolution_clock::time_point tend;
+  std::chrono::duration<double> duration;
 
-    auto start_timing = [&tbegin]() { 
-        tbegin = std::chrono::high_resolution_clock::now();
-    };
+  auto start_timing = [&tbegin]() { 
+    tbegin = std::chrono::high_resolution_clock::now();
+  };
 
-    std::cout << unpack_benchmark::run_benchmark(o, start_timing) << std::endl;
-    tend = std::chrono::high_resolution_clock::now();
-    duration = tend - tbegin;
-    std::cout << duration.count() << std::endl;
+  std::cout << unpack_benchmark::run_benchmark(o, start_timing) << std::endl;
+  tend = std::chrono::high_resolution_clock::now();
+  duration = tend - tbegin;
+  std::cout << duration.count() << std::endl;
 }

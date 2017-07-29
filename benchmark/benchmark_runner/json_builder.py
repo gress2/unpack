@@ -21,6 +21,7 @@ class JSONBuilder:
             "iterations": run_params[7],
             "optimization": self.run_config["optimization"],
             "orientation": run_params[1],
+            "run_id": self.run_config{"run_id"],
             "system": self.run_config["system"],
             "timing": timing,
             "type": type

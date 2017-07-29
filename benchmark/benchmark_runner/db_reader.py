@@ -14,7 +14,7 @@ class DBReader:
         for i in range(0, len(keys)):
             queryDict[keys[i]] = values[i]
         return queryDict
-    def getValuesFromCartesian(self, values, cartesian_keys):
+    def getValuesFromCartesian(self, values, cartesian_keys, run_id = None):
         distinct_values = dict()
         values_dict = dict()
         results = dict()
@@ -26,6 +26,8 @@ class DBReader:
         sets = [ value for key,value in distinct_values.iteritems() ]
         for combination in itertools.product(*sets):
             query = self.buildDict(distinct_values.keys(), list(combination)) 
+            if run_id is not None:
+                query["run_id"] = run_id; 
             query_string = json.dumps(query)
             results[query_string] = []
             cursor = self.collection.find(query, values_dict)

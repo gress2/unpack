@@ -12,49 +12,41 @@ db = dict()
 with open("run_config.json") as run_config_f:
     run_config = json.load(run_config_f)
 
-def print_tuple(container):
-    text = ""
-    char = 0
-    for element in container:
-        current = str(element[0]) + " = " + str(element[1])
-        if (char + len(current) > 128):
-            text += ",\n" + current
-            char = len(current)
-        elif (len(text) > 0):
-            text += ", " + current
-            char += 2 + len(current)
-        else:
-            text += current
-            char += len(current)
-    return text
+def json_str_to_title(json_s):
+    dictionary = json.loads(json_s)
+    title = ""
+    for key in dictionary:
+        if key == "system":
+            continue
+        if len(title) > 0:
+            title += ", "
+        if len(title) > 128:
+            title += "\n"
+        title += key + " = " + dictionary[key] 
+    return title
 
 def plot_entry(data, title = "", x = "iterations", y = "timing"):
-    dictionary = dict()
     plt.figure(figsize = (19.2, 10.8), dpi = 100)
     plt.grid(linestyle='dashed')
+    cont_size_dict = dict()
     for entry in data:
-        serie = copy.deepcopy(entry)
-        serie["system"] = tuple(sorted(serie["system"].items()))
-        del serie[x]
-        del serie[y]
-        serie = tuple(sorted(serie.items()))
-        if serie in dictionary:
-            dictionary[serie].append(entry)
+        c_sz = entry["container_size"]
+        if c_sz in cont_size_dict:
+            cont_size_dict[c_sz].append(entry)
         else:
-            dictionary[serie] = [entry]
-    for serie in dictionary:
+            cont_size_dict[c_sz] = [entry]
+    for sz in cont_size_dict:
         xdata = []
         ydata = []
-        for element in dictionary[serie]:
+        for element in cont_size_dict[sz]:
             xdata.append(element[x])
             ydata.append(element[y])
-        container_size = int(dictionary[serie][0]["container_size"])
         plt.loglog(
             xdata,
             ydata,
             linewidth=2,
             basex=2,
-            label="container_size = " + str(container_size)
+            label="container_size = " + str(sz)
         )
         plt.title(title)
         plt.legend()
@@ -73,6 +65,5 @@ reader = DBReader(run_config)
 data = reader.getValuesFromCartesian(["container_size", "iterations", "timing"], ["access_pattern", \
         "compiler", "complexity", "container", "optimization", "orientation", "type"]) 
 
-for key in db:
-    plot_entry(db[key], print_tuple(key))
-    print("done")
+for entry in data:
+    plot_entry(data[entry], json_str_to_title(entry))

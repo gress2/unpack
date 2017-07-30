@@ -9,7 +9,7 @@ from db_reader import DBReader
 filename = "benchmark.json"
 db = dict()
 
-with open("run_config.json") as run_config_f:
+with open("config/run_config.json") as run_config_f:
     run_config = json.load(run_config_f)
 
 def json_str_to_title(json_s):

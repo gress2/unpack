@@ -3,14 +3,14 @@ import json
 import subprocess
 import sys
 
-from file_writer import FileWriter
-from json_builder import JSONBuilder
-from output_parser import OutputParser
+from lib/file_writer import FileWriter
+from lib/json_builder import JSONBuilder
+from lib/output_parser import OutputParser
 
-with open('run_config.json') as run_config_f:
+with open('config/run_config.json') as run_config_f:
     run_config = json.load(run_config_f)
 
-with open('typemap.json') as typemap_f:
+with open('config/typemap.json') as typemap_f:
     typemap = json.load(typemap_f)["types"]
 
 executable = run_config["executable"]

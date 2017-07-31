@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pprint
 
-from db_reader import DBReader
+from lib.db_reader import DBReader
 
 filename = "benchmark.json"
 db = dict()
@@ -25,28 +25,28 @@ def json_str_to_title(json_s):
         title += key + " = " + dictionary[key] 
     return title
 
-def plot_entry(data, title = "", x = "iterations", y = "timing"):
+def plot_entry(data, title = "", x = "iterations", y = "timing", line_base = "container_size"):
     plt.figure(figsize = (19.2, 10.8), dpi = 100)
-    plt.grid(linestyle='dashed')
-    cont_size_dict = dict()
+    plt.grid(linestyle = 'dashed')
+    line_base_dict = dict()
     for entry in data:
-        c_sz = entry["container_size"]
-        if c_sz in cont_size_dict:
-            cont_size_dict[c_sz].append(entry)
+        l_base = entry[line_base]
+        if l_base in line_base_dict:
+            line_base_dict[l_base].append(entry)
         else:
-            cont_size_dict[c_sz] = [entry]
-    for sz in cont_size_dict:
+            line_base_dict[l_base] = [entry]
+    for base in line_base_dict:
         xdata = []
         ydata = []
-        for element in cont_size_dict[sz]:
+        for element in line_base_dict[base]:
             xdata.append(element[x])
             ydata.append(element[y])
         plt.loglog(
             xdata,
             ydata,
-            linewidth=2,
-            basex=2,
-            label="container_size = " + str(sz)
+            linewidth = 2,
+            basex = 2,
+            label = line_base + " = " + str(base)
         )
         plt.title(title)
         plt.legend()
@@ -66,4 +66,4 @@ data = reader.getValuesFromCartesian(["container_size", "iterations", "timing"],
         "compiler", "complexity", "container", "optimization", "orientation", "type"]) 
 
 for entry in data:
-    plot_entry(data[entry], json_str_to_title(entry))
+    plot_entry(data[entry], json_str_to_title(entry), "iterations", "timing", "container_size")

@@ -3,9 +3,9 @@ import json
 import subprocess
 import sys
 
-from lib/file_writer import FileWriter
-from lib/json_builder import JSONBuilder
-from lib/output_parser import OutputParser
+from lib.file_writer import FileWriter
+from lib.json_builder import JSONBuilder
+from lib.output_parser import OutputParser
 
 with open('config/run_config.json') as run_config_f:
     run_config = json.load(run_config_f)

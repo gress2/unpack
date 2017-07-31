@@ -440,28 +440,6 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
     case 10:
       return dispatch<type_map<type10>>(_opts, start_timing);
       break;
-    /*
-    case 11:
-      return dispatch<type_map<type11>>(_opts, start_timing);
-      break;
-    case 12:
-      return dispatch<type_map<type12>>(_opts, start_timing);
-      break;
-    case 13:
-      return dispatch<type_map<type13>>(_opts, start_timing);
-      break;
-    case 14:
-      return dispatch<type_map<type14>>(_opts, start_timing);
-      break;
-    case 15:
-      return dispatch<type_map<type15>>(_opts, start_timing);
-      break;
-    case 16:
-      return dispatch<type_map<type16>>(_opts, start_timing);
-      break;
-    case 17:
-      return dispatch<type_map<type17>>(_opts, start_timing);
-      break;*/
     default:
       return 'x'; 
   }

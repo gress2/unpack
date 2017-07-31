@@ -1,7 +1,7 @@
 import json
 import sys
 
-from lib/db_writer import DBWriter
+from lib.db_writer import DBWriter
 
 try:
     output_json = open(sys.argv[1])

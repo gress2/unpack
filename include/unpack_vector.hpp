@@ -1,7 +1,7 @@
 #ifndef UNPACK_VECTOR
 #define UNPACK_VECTOR
 
-#include <vector> 
+#include <vector>
 #include <iostream>
 #include "unpack_iterator.hpp"
 #include "unpack_details.hpp"
@@ -38,14 +38,14 @@ class vector<unpack<T>> {
 
     vector<unpack<T>>(vector<unpack<T>>&& v) {
       tuple_for_each([](auto&& _old, auto& _new) {
-        _new = std::move(_old); 
+        _new = std::move(_old);
       }, v._data, _data);
     }
 
     vector<unpack<T>> (std::initializer_list<T> ilist) {
       for (auto& tuple : ilist) {
         push_back(tuple);
-      }  
+      }
     }
 
     vector<unpack<T>> (std::size_t size) {
@@ -55,13 +55,13 @@ class vector<unpack<T>> {
     vector<unpack<T>>& operator=(const vector<unpack<T>>& v) {
       tuple_for_each([](auto& _old, auto& _new) {
         _new = _old;
-      }, v._data, _data); 
+      }, v._data, _data);
       return *this;
     }
 
     vector<unpack<T>>& operator=(vector<unpack<T>>&& v) {
       tuple_for_each([](auto&& _old, auto& _new) {
-        _new = std::move(_old); 
+        _new = std::move(_old);
       }, v._data, _data);
       return *this;
     }
@@ -69,7 +69,7 @@ class vector<unpack<T>> {
     vector<unpack<T>>& operator=(std::initializer_list<T> ilist) {
       clear();
       for (auto& tuple : ilist) {
-        push_back(tuple); 
+        push_back(tuple);
       }
       return *this;
     }
@@ -117,10 +117,10 @@ class vector<unpack<T>> {
     template <typename...Args>
     iterator emplace(const_iterator pos, Args&&...args) {
       tuple_for_each([](auto&& _args, auto& cur_vect, auto& cur_iter) {
-        cur_iter = cur_vect.emplace(cur_iter, std::forward<decltype(_args)>(_args)); 
+        cur_iter = cur_vect.emplace(cur_iter, std::forward<decltype(_args)>(_args));
       }, std::make_tuple(std::forward<Args>(args)...), _data, *(pos.data()));
       iterator it = begin();
-      std::advance(it, std::distance(cbegin(), pos)); 
+      std::advance(it, std::distance(cbegin(), pos));
       return it;
     }
 
@@ -137,7 +137,7 @@ class vector<unpack<T>> {
     iterator erase(const_iterator pos) {
       tuple_for_each([](auto& cur_vect, auto& cur_iter) {
         cur_iter = cur_vect.erase(cur_iter);
-      }, _data, *(pos.data()));  
+      }, _data, *(pos.data()));
       iterator it = begin();
       std::advance(it, std::distance(cbegin(), pos));
       return it;
@@ -151,7 +151,7 @@ class vector<unpack<T>> {
       std::advance(it, std::distance(cbegin(), last));
       return it;
     }
-    
+
     void reserve(size_t size) {
       tuple_for_each([size](auto& cur_vect) {
         cur_vect.reserve(size);
@@ -174,10 +174,10 @@ class vector<unpack<T>> {
       }, _data, *(pos.data()), value);
 
       iterator it = begin();
-      std::advance(it, std::distance(cbegin(), pos)); 
+      std::advance(it, std::distance(cbegin(), pos));
       return it;
     }
-     
+
     iterator insert(const_iterator pos, T&& value ) {
       tuple_for_each([](auto& cur_vect, auto& cur_iter, auto&& tuple_element) {
         cur_iter = cur_vect.insert(cur_iter, std::forward<decltype(tuple_element)>(tuple_element));
@@ -200,20 +200,20 @@ class vector<unpack<T>> {
     iterator insert(const_iterator pos, InputIt first, InputIt last) {
       tuple_for_each([](auto& cur_vect, auto& cur_iter, auto& first_iter, auto& last_iter) {
         cur_iter = cur_vect.insert(cur_iter, first_iter, last_iter);
-      }, _data, *(pos.data()), *(first.data()), *(last.data())); 
+      }, _data, *(pos.data()), *(first.data()), *(last.data()));
       iterator it = begin();
       std::advance(it, std::distance(cbegin(), pos));
       return it;
     }
 
     iterator insert(const_iterator pos, std::initializer_list<T> ilist) {
-      auto end = ilist.end(); 
+      auto end = ilist.end();
       iterator it = begin();
       for (auto cur = end; cur != ilist.begin(); ) {
         cur--;
         it = insert(pos, *cur);
       }
-      
+
       return it;
     }
 
@@ -228,17 +228,17 @@ class vector<unpack<T>> {
     }
 
     void resize(size_t size, const T& value) {
-      tuple_for_each([size](auto& cur_vect, auto& cur_elem) { 
+      tuple_for_each([size](auto& cur_vect, auto& cur_elem) {
         cur_vect.resize(size, cur_elem);
-      }, _data, value); 
-    } 
+      }, _data, value);
+    }
 
     void shrink_to_fit() {
       tuple_for_each([](auto& cur_vect) { cur_vect.shrink_to_fit(); }, _data);
     }
 
     tuple_refs_type operator[](size_t index) {
-      return tuple_r_at_index(_data, index); 
+      return tuple_r_at_index(_data, index);
     }
 
     tuple_const_refs_type operator[](size_t index) const {
@@ -262,7 +262,7 @@ class vector<unpack<T>> {
     tuple_const_refs_type front() const {
       return operator[](0);
     }
-    
+
     tuple_refs_type back() {
       return operator[](size() - 1);
     }
@@ -275,12 +275,27 @@ class vector<unpack<T>> {
       return iterator(make_tuple_vec_iter(_data, [](auto& iter) { return iter.begin(); }));
     }
 
+    template <std::size_t N>
+    auto begin() {
+      return std::get<N>(_data).begin();
+    }
+
     iterator end() {
       return iterator(make_tuple_vec_iter(_data, [](auto& iter) { return iter.end(); }));
     }
-    
+
+    template <std::size_t N>
+    auto end() {
+      return std::get<N>(_data).end();
+    }
+
     const_iterator begin() const {
       return const_iterator(make_tuple_vec_const_iter(_data, [](auto& iter) { return iter.begin(); }));
+    }
+
+    template <std::size_t N>
+    auto begin() const {
+      return std::get<N>(_data).cbegin();
     }
 
     const_iterator cbegin() const {
@@ -289,6 +304,11 @@ class vector<unpack<T>> {
 
     const_iterator end() const {
       return const_iterator(make_tuple_vec_const_iter(_data, [](auto& iter) { return iter.end(); }));
+    }
+
+    template <std::size_t N>
+    auto end() const {
+      return std::get<N>(_data).cend();
     }
 
     const_iterator cend() const {
@@ -305,7 +325,7 @@ class vector<unpack<T>> {
 template <typename...T>
 void swap(std::tuple<T&...>&& lhs, std::tuple<T&...>&& rhs) {
   tuple_for_each([](auto& lhs_elem, auto& rhs_elem) {
-    swap(lhs_elem, rhs_elem); 
+    swap(lhs_elem, rhs_elem);
   }, std::forward<decltype(lhs)>(lhs), std::forward<decltype(rhs)>(rhs));
 }
 

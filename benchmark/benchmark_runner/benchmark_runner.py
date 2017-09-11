@@ -18,29 +18,29 @@ parser = OutputParser(executable)
 json_builder = JSONBuilder(run_config)
 
 if run_config["write_mode"] == "db":
-    from db_writer import DBWriter 
+    from db_writer import DBWriter
     writer = DBWriter(run_config)
 if run_config["write_mode"] == "file":
     writer = FileWriter(run_config)
 
-data_layout = ["aos", "soa"]
+data_layout = ["aos"]
 container = ["vector"]
 container_size = [str(x) for x in [2**0, 2**10, 2**20]]
-type_index = [str(x) for x in [0,1,2,3,4]]
-operation_complexity = ["simple","complex"]
-access_pattern = ["single","independent","combined"]
+type_index = [str(x) for x in [6]]
+operation_complexity = ["simple"]
+access_pattern = ["single"]
 iterations = [str(2**x) for x in range(20)]
 
 parameter_space = [[executable], data_layout, container, container_size, type_index,
         operation_complexity, access_pattern, iterations]
-for combination in itertools.product(*parameter_space): 
+for combination in itertools.product(*parameter_space):
     type = typemap[int(combination[4])]
-    if (type["length"] * int(combination[3]) * int(combination[7]) > 1e9):
+    if (type["length"] * int(combination[3]) * int(combination[7]) > 1e10):
         continue
     args = list(combination)
     if "unpack_benchmark" in executable:
         args.insert(0, "time")
     timing = parser.parse(subprocess.check_output(args, stderr=subprocess.STDOUT))
-     
+
     entry = json_builder.build(combination, timing, type["type"])
     writer.write(entry)

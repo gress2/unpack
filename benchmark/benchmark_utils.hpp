@@ -27,6 +27,26 @@
 namespace unpack_benchmark
 {
 
+template <typename T>
+auto try_raw_iter_begin(T& t) -> decltype(t.begin<0>()) {
+  return t.begin<0>();
+}
+
+template <typename T>
+auto try_raw_iter_begin(T& t) {
+  return t.begin();
+}
+
+template <typename T>
+auto try_raw_iter_end(T& t) -> decltype(t.end<0>()) {
+  return t.end<0>();
+}
+
+template <typename T>
+auto try_raw_iter_end(T& t) {
+  return t.end();
+}
+
 template <typename It>
 void fill_container_randomly(
   It&& begin,
@@ -82,9 +102,10 @@ struct opts {
   _function fn;
   access_pattern ap;
   size_t loop_iterations;
+  bool raw_iterator = false;
 
   // example: ./Release/bin/unpack_chrono_benchmark soa vector 1000000 1 simple independent 100
-  opts(char* argv[]) {
+  opts(char* argv[], int argc) {
     if (strncmp(argv[1], "aos", 3) == 0) {
       ds = opts::data_structure::aos;
     } else if (strncmp(argv[1], "soa", 3) == 0) {
@@ -129,6 +150,13 @@ struct opts {
     }
 
     loop_iterations = std::stoi(argv[7]);
+
+
+    if (argc >= 9) {
+      if (strncmp(argv[8], "raw", 3) == 0) {
+        raw_iterator = true;
+      }
+    }
   }
 };
 
@@ -137,8 +165,8 @@ struct opts {
 template <typename T>
 auto simple_op(T& t) -> decltype((void)(t *= 2)) {
   using type = typename std::remove_reference<decltype(t)>::type;
-  t *= std::is_floating_point<type>::value ? static_cast<type>(1.0000001) : 
-    -t * (t == std::numeric_limits<type>::max() - 1) + (t + 1) * 
+  t *= std::is_floating_point<type>::value ? static_cast<type>(1.0000001) :
+    -t * (t == std::numeric_limits<type>::max() - 1) + (t + 1) *
     (t != std::numeric_limits<type>::max() - 1);
 }
 
@@ -146,7 +174,7 @@ template <typename T>
 auto simple_op(T& t) -> decltype((void)(std::get<0>(t))) {
   tuple_for_each([](auto& tuple_elem) {
     simple_op(tuple_elem);
-  }, t); 
+  }, t);
 }
 
 void simple_op(std::string& s) {
@@ -167,10 +195,16 @@ void simple_op(T&... t) {
 }
 
 template <typename T>
-void simple_single(T& container, size_t iterations) {
+void simple_single(T& container, size_t iterations, bool raw_iterator) {
   for (size_t i = 0; i < iterations; i++) {
-    for (auto&& element : container) {
-      simple_op(std::get<0>(element));
+    if (raw_iterator){
+      for (auto it = try_raw_iter_begin(container); it != try_raw_iter_end(container); ++it) {
+        simple_op(*it);
+      }
+    } else {
+      for (auto&& element : container) {
+        simple_op(std::get<0>(element));
+      }
     }
   }
 }
@@ -188,16 +222,16 @@ void simple_independent(T& container, size_t iterations) {
 
 // COMPLEX OPS - SINGLE / INDEPENDENT ELEMENT ACCESS
 
-template <typename T> 
+template <typename T>
 typename std::enable_if<std::is_integral<typename std::remove_reference<T>::type>
        ::value>::type complex_op(T& t) {
   t += _pow<50>(t) % 50;
 }
 
-template <typename T> 
+template <typename T>
 typename std::enable_if<std::is_floating_point<typename std::remove_reference<T>::type>
        ::value>::type complex_op(T& t) {
-  t = cos(t);		
+  t = cos(t);
 }
 
 template <typename T>
@@ -205,7 +239,7 @@ auto complex_op(T& t) -> decltype((void)(std::get<0>(t))) {
   tuple_for_each([](auto& tuple_elem) {
     complex_op(tuple_elem);
   }, t);
-} 
+}
 
 void complex_op(std::string& s) {
   std::hash<std::string> hash_fn;
@@ -225,7 +259,7 @@ void complex_op_helper(T& t) {
 
 template <typename...T>
 void complex_op(T&... t) {
-   complex_op_helper(t...); 
+   complex_op_helper(t...);
 }
 
 template <typename T>
@@ -233,7 +267,7 @@ void complex_single(T& container, size_t iterations) {
   for (size_t i = 0; i < iterations; i++) {
     for (auto&& element : container) {
       complex_op(std::get<0>(element));
-    } 
+    }
   }
 }
 
@@ -263,13 +297,13 @@ auto sum(T&& t, Tail&&... tail) {
 template <typename T, size_t... Indices>
 auto simple_combined_fn_impl(T&& t, std::index_sequence<Indices...>) {
   return sum(std::get<Indices>(t)...);
-} 
+}
 
 template <typename T>
 void simple_combined_fn(T&& t) {
   constexpr auto size = std::tuple_size<typename std::remove_reference<T>::type>{};
-  auto fn_res = simple_combined_fn_impl(std::forward<T>(t), 
-          std::make_index_sequence<size>{}); 
+  auto fn_res = simple_combined_fn_impl(std::forward<T>(t),
+          std::make_index_sequence<size>{});
   tuple_for_each([&fn_res](auto& tuple_elem) {
     add_to_any(fn_res, tuple_elem);
   }, std::forward<T>(t));
@@ -292,7 +326,7 @@ double strange_addition() {
 
 template <typename T, typename... Tail>
 auto strange_addition(T&& t, Tail&&... tail) {
-  return pow(convert(std::forward<T>(t)), 4 + cos(convert(std::forward<T>(t)))) 
+  return pow(convert(std::forward<T>(t)), 4 + cos(convert(std::forward<T>(t))))
     + strange_addition(std::forward<Tail>(tail)...);
 }
 
@@ -304,8 +338,8 @@ auto complex_combined_fn_impl(T&& t, std::index_sequence<Indices...>) {
 template <typename T>
 void complex_combined_fn(T&& t) {
   constexpr auto size = std::tuple_size<typename std::remove_reference<T>::type>{};
-  auto fn_res = complex_combined_fn_impl(std::forward<T>(t), 
-          std::make_index_sequence<size>{}); 
+  auto fn_res = complex_combined_fn_impl(std::forward<T>(t),
+          std::make_index_sequence<size>{});
   tuple_for_each([&fn_res](auto&& tuple_elem) {
     add_to_any(fn_res, tuple_elem);
   }, std::forward<T>(t));
@@ -328,10 +362,10 @@ unsigned char run_fn(opts& _opts, F& start_timing) {
   if (_opts.fn == opts::_function::simple) {
     switch(_opts.ap) {
       case opts::access_pattern::single:
-        simple_single(container, _opts.loop_iterations); 
+        simple_single(container, _opts.loop_iterations, _opts.raw_iterator);
         break;
       case opts::access_pattern::independent:
-        simple_independent(container, _opts.loop_iterations); 
+        simple_independent(container, _opts.loop_iterations);
         break;
       case opts::access_pattern::combined:
         simple_combined(container, _opts.loop_iterations);
@@ -348,7 +382,7 @@ unsigned char run_fn(opts& _opts, F& start_timing) {
       case opts::access_pattern::combined:
         complex_combined(container, _opts.loop_iterations);
         break;
-    } 
+    }
   }
   return check_bytes(container.begin(), container.end());
 }
@@ -397,7 +431,7 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
   using type0 = typename std::tuple<char>;
   using type1 = typename std::tuple<int>;
   using type2 = typename std::tuple<double, double>;
-  using type3 = typename repeat_type_tuple<double, 16>::type;
+  using type3 = typename repeat_type_tuple<double, 8>::type;
   using type4 = typename std::tuple<char, int, std::string, double>;
   using type5 = typename std::tuple<std::vector<int>>;
   using type6 = typename repeat_type_tuple<int, 4>::type;
@@ -436,12 +470,12 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
       break;
     case 9:
       return dispatch<type_map<type9>>(_opts, start_timing);
-      break;       
+      break;
     case 10:
       return dispatch<type_map<type10>>(_opts, start_timing);
       break;
     default:
-      return 'x'; 
+      return 'x';
   }
 }
 

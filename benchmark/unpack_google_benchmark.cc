@@ -12,7 +12,7 @@ static void DoBenchmark(benchmark::State& state, unpack_benchmark::opts o) {
 
 int main(int argc, char** argv) {
   assert(argc == 8);
-  auto opts = unpack_benchmark::opts(argv);
+  auto opts = unpack_benchmark::opts(argv, argc);
   benchmark::RegisterBenchmark("DoBenchmark", [&opts](auto& state) { DoBenchmark(state, opts); })->MinTime(0.01);
   benchmark::Initialize(&argc, argv);
   benchmark::RunSpecifiedBenchmarks();

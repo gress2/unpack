@@ -24,6 +24,9 @@ option (O1 "O1" OFF)
 option (O2 "O2" OFF)
 option (O3 "O3" OFF)
 option (Ofast "Ofast" OFF)
+option (MAKE_ALT "MAKE_ALT" OFF) 
+
+MESSAGE( STATUS "alt?:     " ${MAKE_ALT} )
 
 if ( O0 )
     set ( CMAKE_CXX_FLAGS_RELEASE "-Wall -O0" )

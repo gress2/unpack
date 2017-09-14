@@ -25,6 +25,8 @@ option (O2 "O2" OFF)
 option (O3 "O3" OFF)
 option (Ofast "Ofast" OFF)
 
+option (MAKE_ALT "MAKE_ALT" OFF) 
+
 if ( O0 )
     set ( CMAKE_CXX_FLAGS_RELEASE "-Wall -O0" )
 endif( O0 )

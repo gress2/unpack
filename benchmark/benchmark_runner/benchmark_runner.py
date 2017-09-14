@@ -44,3 +44,4 @@ for combination in itertools.product(*parameter_space):
      
     entry = json_builder.build(combination, timing, type["type"])
     writer.write(entry)
+

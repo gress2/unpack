@@ -6,14 +6,14 @@
 #include "unpack.hpp"
 
 int main(int argc, char* argv[]) {
-  assert(argc == 8);
-  unpack_benchmark::opts o(argv);
+  assert(argc >= 8);
+  unpack_benchmark::opts o(argv, argc);
 
   typename std::chrono::high_resolution_clock::time_point tbegin;
   typename std::chrono::high_resolution_clock::time_point tend;
   std::chrono::duration<double> duration;
 
-  auto start_timing = [&tbegin]() { 
+  auto start_timing = [&tbegin]() {
     tbegin = std::chrono::high_resolution_clock::now();
   };
 

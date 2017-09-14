@@ -266,7 +266,7 @@ TEST_F(UnpackTest, IteratorBeginCorrect) {
   ASSERT_EQ(*it, _e0);
 }
 
-TEST_F(UnpackTest, IteratorBeginByIndexCorrect) {
+TEST_F(UnpackTest, IteratorBeginRawCorrect) {
   _v0.push_back(_e0);
   _v0.push_back(_e1);
   auto it = _v0.begin<1>(); 
@@ -279,7 +279,7 @@ TEST_F(UnpackTest, ConstIteratorBeginCorrect) {
    ASSERT_EQ(*it, _e0);
 }
 
-TEST_F(UnpackTest, ConstIteratorBeginByIndexCorrect) {
+TEST_F(UnpackTest, ConstIteratorBeginRawCorrect) {
   const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
   auto it = cv.begin<1>();
   ASSERT_EQ(*it, 5.0);
@@ -401,6 +401,13 @@ TEST_F(UnpackTest, IteratorEndCorrect) {
   ASSERT_TRUE(it0 == it1);
 }
 
+TEST_F(UnpackTest, IteratorEndRawCorrect) {
+  _v0 = { _e0, _e1, _e2 };
+  auto it0 = _v0.end<0>();
+  it0--;
+  ASSERT_TRUE(*it0 == 74); 
+}
+
 TEST_F(UnpackTest, ConstIteratorEndCorrect) {
   const vector<unpack<tuple<int, double>>> cv = { _e0, _e1, _e2 };
   auto it0 = cv.begin();
@@ -408,6 +415,13 @@ TEST_F(UnpackTest, ConstIteratorEndCorrect) {
   ASSERT_FALSE(it0 == it1);
   it0 = cv.end();
   ASSERT_TRUE(it0 == it1);
+}
+
+TEST_F(UnpackTest, ConstIteratorRawEndCorrect) {
+  const vector<unpack<tuple<int,double>>> cv = { _e0, _e1, _e2 };
+  auto it0 = cv.end<0>();
+  it0--;
+  ASSERT_TRUE(*it0 == 74);
 }
 
 TEST_F(UnpackTest, ConstIteratorCendCorrect) {

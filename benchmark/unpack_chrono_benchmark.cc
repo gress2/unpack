@@ -6,7 +6,7 @@
 #include "unpack.hpp"
 
 int main(int argc, char* argv[]) {
-  assert(argc == 8);
+  assert(argc >= 8);
   unpack_benchmark::opts o(argv, argc);
 
   typename std::chrono::high_resolution_clock::time_point tbegin;

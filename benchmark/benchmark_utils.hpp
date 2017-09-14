@@ -27,26 +27,6 @@
 namespace unpack_benchmark
 {
 
-template <typename T>
-auto try_raw_iter_begin(T& t) -> decltype(t.begin<0>()) {
-  return t.begin<0>();
-}
-
-template <typename T>
-auto try_raw_iter_begin(T& t) {
-  return t.begin();
-}
-
-template <typename T>
-auto try_raw_iter_end(T& t) -> decltype(t.end<0>()) {
-  return t.end<0>();
-}
-
-template <typename T>
-auto try_raw_iter_end(T& t) {
-  return t.end();
-}
-
 template <typename It>
 void fill_container_randomly(
   It&& begin,
@@ -194,14 +174,27 @@ void simple_op(T&... t) {
   simple_op_helper(t...);
 }
 
+
+template <typename T>
+void simple_single_raw(std::vector<unpack<T>>& container) {
+  for (auto it = container.template begin<0>(); it != container.template end<0>(); ++it) {
+    simple_op(*it);
+  }
+}
+
+template <typename T>
+void simple_single_raw(T& container) {
+  for (auto&& element : container) {
+    simple_op(std::get<0>(element));
+  }
+}
+
 template <typename T>
 void simple_single(T& container, size_t iterations, bool raw_iterator) {
   for (size_t i = 0; i < iterations; i++) {
-    if (raw_iterator){
-      for (auto it = try_raw_iter_begin(container); it != try_raw_iter_end(container); ++it) {
-        simple_op(*it);
-      }
-    } else {
+    if (raw_iterator) {
+      simple_single_raw(container); 
+    } else { 
       for (auto&& element : container) {
         simple_op(std::get<0>(element));
       }

@@ -1,9 +1,9 @@
-// ============================ UNPACK BENCHMARK ============================ //
+// ========================= UNPACK META BENCHMARK ========================== //
 // Project:         unpack
-// Name:            unpack_benchmark.cpp
+// Name:            unpack_meta_benchmark.cc
 // Description:     Runs benchmarks on unpack
-// Contributor(s):  Collin Gress [2017]
-//                  Vincent Reverdy [2017]
+// Contributor(s):  Vincent Reverdy [2017]
+//                  Collin Gress [2017]
 // License:         BSD 3-Clause License
 // ========================================================================== //
 
@@ -12,8 +12,8 @@
 // ================================ PREAMBLE ================================ //
 // C++ standard library
 // Project sources
-#include "unpack.hpp"
-#include "unpack_alt_benchmark.hpp"
+#include "../include/unpack.hpp"
+#include "unpack_meta_benchmark.hpp"
 // Third-party libraries
 #ifdef WITHGOOGLEBENCHMARK
 #include "benchmark/benchmark_api.h"
@@ -23,18 +23,63 @@
 
 
 
+/* ********************************  LOOPER ********************************* */
+// Looper structure definition
+template <option::access>
+struct looper
+{
+    // Execution
+    template <class F, class R>
+    void operator()(F&& function, R&& range) {
+        for (auto&& x: std::forward<R>(range)) {
+            std::forward<F>(function)(std::forward<decltype(x)>(x));
+        }
+    }
+};
+
+// Looper structure specialization: column case
+template <>
+struct looper<option::access::column>
+{
+    // Execution
+    template <class F, class R, class = if_not_t<is_column_accessible, R>>
+    void operator()(F&& function, R&& range) {
+        for (auto&& x: std::forward<R>(range)) {
+            std::forward<F>(function)(std::forward<decltype(x)>(x));
+        }
+    }
+    template <class F, class R, class = if_t<is_column_accessible, R>>
+    decltype(std::ignore) operator()(F&& function, R&& range) {
+        using iterator_type = raw_t<decltype(std::begin(std::declval<R>()))>;
+        using iterator_traits = std::iterator_traits<iterator_type>;
+        using tuple_type = typename iterator_traits::value_type;
+        constexpr std::size_t tuple_size = std::tuple_size<tuple_type>::value;
+        constexpr std::size_t index = tuple_size / 2;
+        auto first = std::forward<R>(range).template begin<index>();
+        auto last = std::forward<R>(range).template end<index>();
+        for (auto it = first; it != last; ++it) {
+            std::forward<F>(function)(it);
+        }
+        return std::ignore;
+    }
+};
+/* ************************************************************************** */
+
+
+
 /* ******************************  BENCHMARKER ****************************** */
 // Benchmarker structure declaration
-template <option::tool>
+template <option::tool, option::access>
 struct benchmarker;
 
 // Benchmarker structure definition: system specialization
-template <>
-struct benchmarker<option::tool::system>
+template <option::access Access>
+struct benchmarker<option::tool::system, Access>
 {
     // Benchmark
     template <class F, class R, class M>
     double operator()(F&& function, R&& range, M&& measurements) {
+        using looper_type = looper<Access>;
         using clock_type = std::chrono::system_clock;
         using duration_type = std::chrono::duration<double>;
         typename clock_type::time_point tbegin;
@@ -44,25 +89,24 @@ struct benchmarker<option::tool::system>
         tbegin = clock_type::now();
         for (auto&& m: std::forward<M>(measurements)) {
             t0 = clock_type::now();
-            for (auto&& x: std::forward<R>(range)) {
-                std::forward<F>(function)(std::forward<decltype(x)>(x));
-            }
+            looper_type()(std::forward<F>(function), std::forward<R>(range));
             t1 = clock_type::now();
             m = std::chrono::duration_cast<duration_type>(t1 - t0).count();
         }
         tend = clock_type::now();
         return std::chrono::duration_cast<duration_type>(tend - tbegin).count();
     }
-
+    
 };
 
 // Benchmarker structure definition: chrono specialization
-template <>
-struct benchmarker<option::tool::chrono>
+template <option::access Access>
+struct benchmarker<option::tool::chrono, Access>
 {
     // Benchmark
     template <class F, class R, class M>
     double operator()(F&& function, R&& range, M&& measurements) {
+        using looper_type = looper<Access>;
         using clock_type = std::chrono::steady_clock;
         using duration_type = std::chrono::duration<double>;
         typename clock_type::time_point tbegin;
@@ -72,9 +116,7 @@ struct benchmarker<option::tool::chrono>
         tbegin = clock_type::now();
         for (auto&& m: std::forward<M>(measurements)) {
             t0 = clock_type::now();
-            for (auto&& x: std::forward<R>(range)) {
-                std::forward<F>(function)(std::forward<decltype(x)>(x));
-            }
+            looper_type()(std::forward<F>(function), std::forward<R>(range));
             t1 = clock_type::now();
             m = std::chrono::duration_cast<duration_type>(t1 - t0).count();
         }
@@ -84,8 +126,8 @@ struct benchmarker<option::tool::chrono>
 };
 
 // Benchmarker structure definition: google specialization
-template <>
-struct benchmarker<option::tool::google>
+template <option::access Access>
+struct benchmarker<option::tool::google, Access>
 {
     // Benchmark
     template <class R, class F, class M>
@@ -95,8 +137,8 @@ struct benchmarker<option::tool::google>
 };
 
 // Benchmarker structure definition: googles specialization
-template <>
-struct benchmarker<option::tool::googles>
+template <option::access Access>
+struct benchmarker<option::tool::googles, Access>
 {
     // Benchmark
     template <class R, class F, class M>
@@ -119,25 +161,25 @@ template <
 struct executor
 {
     // Types
-    using options_type = Options;
-    using initializer_type = Initializer;
-    using finalizer_type = Finalizer;
-    using container_type = typename parameterized_container<
-        options_type::orientation,
-        options_type::container,
-        typename options_type::type,
+    using options_t = Options;
+    using initializer_t = Initializer;
+    using finalizer_t = Finalizer;
+    using container_t = typename parameterized_container<
+        options_t::orientation,
+        options_t::container,
+        typename options_t::type,
         Unpacker
     >::type;
-    using invoker_type = invoker<options_type::access>;
-    using operation_type = operation<options_type::complexity>;
-    using benchmaker_type = benchmarker<options_type::tool>;
+    using invoker_t = invoker<options_t::access>;
+    using operation_t = operation<options_t::complexity>;
+    using benchmaker_t = benchmarker<options_t::tool, options_t::access>;
 
     // Lifecyle
     executor(
         std::size_t iterations,
         std::size_t container_size,
-        const initializer_type& i = initializer_type(),
-        const finalizer_type& f = finalizer_type()
+        const initializer_t& i = initializer_t(),
+        const finalizer_t& f = finalizer_t()
     )
     : count(iterations)
     , size(container_size)
@@ -150,10 +192,10 @@ struct executor
     // Call benchmark
     void operator()() {
         auto function = [](auto&& x){
-            invoker_type()(operation_type(), std::forward<decltype(x)>(x));
+            invoker_t()(operation_t(), std::forward<decltype(x)>(x));
         };
-        benchmaker_type benchmark;
-        container_type container(size);
+        benchmaker_t benchmark;
+        container_t container(size);
         initializer(container);
         timing = benchmark(function, container, measurements);
         finalizer(container);
@@ -162,8 +204,8 @@ struct executor
     // Members
     std::size_t count;
     std::size_t size;
-    initializer_type initializer;
-    finalizer_type finalizer;
+    initializer_t initializer;
+    finalizer_t finalizer;
     double timing;
     std::vector<double> measurements;
 };
@@ -173,7 +215,7 @@ struct executor
 
 /* ********************************  PROGRAM ******************************** */
 // Program structure definition
-template <bool WithGoogle = true, bool WithAllTypes = true>
+template <bool WithGoogle = false, bool WithAllTypes = true>
 struct program
 {
     // Types
@@ -263,16 +305,17 @@ struct program
     using complexity_selector_t = option_selector<
         option::complexity,
         option::complexity::simple,
-        option::complexity::complex
+        option::complexity::complex,
+        option::complexity::branching
     >;
     using access_selector_t = option_selector<
         option::access,
         option::access::single,
         option::access::independent,
         option::access::combined,
-        option::access::mono
+        option::access::column
     >;
-
+    
     // Lifecycle
     program(int argc, char** argv)
     : filename(parse(make_command(argc, argv), "filename"))
@@ -315,6 +358,14 @@ struct program
                                     decltype(access_v)::value
                                 >;
                                 using executor_t = executor<config, unpack>;
+                                (void)([
+                                    &tool_v,
+                                    &orientation_v,
+                                    &container_v,
+                                    &type_v,
+                                    &complexity_v,
+                                    &access_v
+                                ](){});
                                 executor_t exec(count, size);
                                 exec(std::forward<Args>(args)...);
                                 timing = exec.timing;
@@ -437,7 +488,7 @@ struct program
         text += access_selector_t().to_string();
         return text;
     }
-
+    
     // Members
     const std::string filename;
     const std::string os;

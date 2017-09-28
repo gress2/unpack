@@ -1,13 +1,12 @@
-// ============================ UNPACK BENCHMARK ============================ //
+// ========================= UNPACK META BENCHMARK ========================== //
 // Project:         unpack
-// Name:            unpack_benchmark.hpp
+// Name:            unpack_meta_benchmark.hpp
 // Description:     Runs benchmarks on unpack
 // Contributor(s):  Vincent Reverdy [2017]
-//                  Collin Gress [2017]
 // License:         BSD 3-Clause License
 // ========================================================================== //
-#ifndef _UNPACK_ALT_BENCHMARK_HPP_INCLUDED
-#define _UNPACK_ALT_BENCHMARK_HPP_INCLUDED
+#ifndef _UNPACK_META_BENCHMARK_HPP_INCLUDED
+#define _UNPACK_META_BENCHMARK_HPP_INCLUDED
 // ========================================================================== //
 
 
@@ -157,6 +156,20 @@ struct is_iterator
 // Is an iterator structure definition
 template <class T>
 struct is_iterator<T, void_t<iterator_category<raw_t<T>>>>
+: std::true_type
+{
+};
+
+// Is not column accessible structure definition
+template <class T, class = void>
+struct is_column_accessible
+: std::false_type
+{
+};
+
+// Is column accessible structure definition
+template <class T>
+struct is_column_accessible<T, void_t<decltype(raw_t<T>().template begin<0>())>>
 : std::true_type
 {
 };
@@ -502,7 +515,7 @@ struct type_selector
     using enable_if = typename std::enable_if<(I < sizeof...(T))>::type;
     template <class Dummy>
     using string_type = std::string;
-
+    
     // Lifecycle
     explicit type_selector(): types(), names(type_string<T>::name()...) {
     };
@@ -662,14 +675,14 @@ struct random_generator
     static constexpr double rmax = 1 - std::numeric_limits<double>::epsilon();
     static constexpr char cmin = '0';
     static constexpr char cmax = '9';
-
+    
     // Lifecycle
     explicit random_generator(std::size_t seed = npos)
     : engine(), idist(imin, imax), rdist(rmin, rmax), cdist(cmin, cmax) {
         std::random_device device;
         engine = engine_type(seed == npos ? device() : seed);
     }
-
+    
     template <class T, class = if_t<is_integral, T>>
     T get() {
         return idist(engine) % std::numeric_limits<T>::max();
@@ -707,7 +720,7 @@ struct random_initializer
     static constexpr std::size_t container_size = ContainerSize;
     template <class T, class G = generator_type>
     using if_generatable_t = decltype(std::declval<G>().template get<T>());
-
+    
     // Lifecycle
     explicit random_initializer(generator_type g = Generator()): generator(g) {
     }
@@ -820,8 +833,8 @@ struct option
     enum struct orientation {aos, soa};
     enum struct container {vector};
     enum struct type {};
-    enum struct complexity {simple, complex};
-    enum struct access {single, independent, combined, mono};
+    enum struct complexity {simple, complex, branching};
+    enum struct access {single, independent, combined, column};
 };
 
 // Option type name structure declaration
@@ -937,6 +950,13 @@ struct option_name<option::complexity, option::complexity::complex>
     static constexpr auto value = "complex";
 };
 
+// Option name structure definition: branching specialization
+template <>
+struct option_name<option::complexity, option::complexity::branching>
+{
+    static constexpr auto value = "branching";
+};
+
 // Option name structure definition: single specialization
 template <>
 struct option_name<option::access, option::access::single>
@@ -958,11 +978,11 @@ struct option_name<option::access, option::access::combined>
     static constexpr auto value = "combined";
 };
 
-// Option name structure definition: mono specialization
+// Option name structure definition: column specialization
 template <>
-struct option_name<option::access, option::access::mono>
+struct option_name<option::access, option::access::column>
 {
-    static constexpr auto value = "mono";
+    static constexpr auto value = "column";
 };
 
 // Option type structure definition
@@ -1015,7 +1035,7 @@ struct math
     static constexpr T signum(T x) {
         constexpr T zero = T();
         return (zero < x) - (x < zero);
-    }
+    } 
 
     // Power
     template <int N, class T>
@@ -1034,7 +1054,7 @@ struct math
         using check = typename std::enable_if<(N * N < max), T>::type;
         return M > 1 ? E > 0 ? metapowm<next, M, check>(b, c * b % T(M)) : c : 0;
     }
-
+    
     // Square root
     template <class T>
     static constexpr T sqrt(T x, T current, T previous = T()) {
@@ -1100,14 +1120,14 @@ struct operation<option::complexity::simple>
 {
     // Types
     using type = double;
-
+    
     // Apply
     template <class T, class... X, class = if_t<is_integral, T>>
     constexpr type operator()(T& x, X...) {
-        constexpr T min = std::numeric_limits<T>::min();
+        constexpr T zero = 0;
         constexpr T max = std::numeric_limits<T>::max();
-        x = -(x - math::signum(x)) + (void(min), x == 0) * max;
-        assert(x >= min && x <= max);
+        x = -(x - math::signum(x)) + (x == zero) * max;
+        assert(x >= std::numeric_limits<T>::min() && x <= max);
         return x;
     }
     template <class T, class... X, class = if_t<is_floating_point, T>>
@@ -1134,17 +1154,17 @@ struct operation<option::complexity::complex>
 {
     // Types
     using type = double;
-
+    
     // Apply
     template <class T, class... X, class = if_t<is_integral, T>>
     constexpr type operator()(T& x, X...) {
+        constexpr T zero = 0;
         constexpr T exp = 3;
         constexpr T mod = 11;
-        constexpr T min = std::numeric_limits<T>::min();
         constexpr T max = std::numeric_limits<T>::max();
-        x = -(x - math::signum(x) * mod) + (void(min), x == 0) * max;
+        x = -(x - math::signum(x) * mod) + (x == zero) * max;
         x = math::metapowm<exp, mod>(x);
-        assert(x >= min && x <= max);
+        assert(x >= std::numeric_limits<T>::min() && x <= max);
         return x;
     }
     template <class T, class... X, class = if_t<is_floating_point, T>>
@@ -1167,6 +1187,65 @@ struct operation<option::complexity::complex>
         std::rotate(std::begin(x), std::begin(x) + count, std::end(x));
         x.resize(size);
         std::rotate(std::begin(x), std::begin(x) + 1, std::end(x));
+        assert(size > 0 && x.size() == size);
+        return size;
+    }
+};
+
+// Operation structure definition: branching operation specialization
+template <>
+struct operation<option::complexity::branching>
+{
+    // Types
+    using type = double;
+    
+    // Apply
+    template <class T, class... X, class = if_t<is_integral, T>>
+    constexpr type operator()(T& x, X...) {
+        constexpr T zero = 0;
+        constexpr T one = 1;
+        constexpr T max = std::numeric_limits<T>::max();
+        if (x > zero) {
+            x = one - x;
+        } else if (x < zero) {
+            x = -x - one;
+        } else {
+            x += max;
+        }
+        assert(x >= std::numeric_limits<T>::min() && x <= max);
+        return x;
+    }
+    template <class T, class... X, class = if_t<is_floating_point, T>>
+    constexpr type operator()(T& x, X&...) {
+        constexpr T zero = 0;
+        constexpr T one = 1;
+        constexpr T eps = std::numeric_limits<T>::epsilon();
+        if (x > zero) {
+            if (x > eps) {
+                x = (one + x) / x;
+            } else {
+                x = (one + eps) / eps;
+            }
+        } else {
+            if (x < -eps) {
+                x = (x - one) / x;
+            } else {
+                x = (-eps - one) / -eps;
+            }
+        }
+        assert(std::isnormal(x));
+        return x;
+    }
+    template <class T, class... Dummy, class = if_t<is_string, T>>
+    constexpr type operator()(T& x) {
+        const std::size_t size = x.size();
+        if (x.front() & 1) {
+            x.insert(0, 1, x.back());
+        } else {
+            x.insert(0, 1, x.front());
+            std::swap(x.front(), x[size]);
+        }
+        x.resize(size);
         assert(size > 0 && x.size() == size);
         return size;
     }
@@ -1195,7 +1274,7 @@ struct invoker<option::access::single>
     static constexpr void invoke(F&& f, T&& x, D...) {
         for (auto&& e: std::forward<T>(x)) {
             invoke(std::forward<F>(f), std::forward<decltype(e)>(e));
-        }
+        } 
     }
     template <class F, class T, std::size_t... I, class = if_t<is_tuple, T>>
     static constexpr void invoke(F&& f, T&& x, std::index_sequence<I...>) {
@@ -1230,7 +1309,7 @@ struct invoker<option::access::independent>
     static constexpr void invoke(F&& f, T&& x, D...) {
         for (auto&& e: std::forward<T>(x)) {
             invoke(std::forward<F>(f), std::forward<decltype(e)>(e));
-        }
+        } 
     }
     template <class F, class T, std::size_t... I, class = if_t<is_tuple, T>>
     static constexpr void invoke(F&& f, T&& x, std::index_sequence<I...>) {
@@ -1257,9 +1336,13 @@ struct invoker<option::access::combined>
     // Call
     template <class F, class T, std::size_t = std::tuple_size<raw_t<T>>()()>
     void operator()(F&& f, T&& x) {
-        volatile typename raw_t<F>::type sum = typename raw_t<F>::type();
+        using type = typename raw_t<F>::type;
+        volatile type sum = type();
         auto lambda = [&sum, &f](auto&& x){
-            sum += std::cos(std::forward<F>(f)(std::forward<decltype(x)>(x)));
+            constexpr type one = 1;
+            constexpr type half = one / (one + one);
+            type value = std::forward<F>(f)(std::forward<decltype(x)>(x));
+            sum += ((one + std::fabs(value)) / (std::fabs(value) + half)) - one;
         };
         invoke(lambda, std::forward<T>(x));
         assert(std::isfinite(sum));
@@ -1273,7 +1356,7 @@ struct invoker<option::access::combined>
     static constexpr void invoke(F&& f, T&& x, D...) {
         for (auto&& e: std::forward<T>(x)) {
             invoke(std::forward<F>(f), std::forward<decltype(e)>(e));
-        }
+        } 
     }
     template <class F, class T, std::size_t... I, class = if_t<is_tuple, T>>
     static constexpr void invoke(F&& f, T&& x, std::index_sequence<I...>) {
@@ -1293,14 +1376,19 @@ struct invoker<option::access::combined>
     }
 };
 
-// Invoker structure declaration: mono specialization
+// Invoker structure declaration: column specialization
 template <>
-struct invoker<option::access::mono>
+struct invoker<option::access::column>
 {
     // Call
-    template <class F, class T, std::size_t N = std::tuple_size<raw_t<T>>()()>
+    template <class F, class T, class = if_not_t<is_iterator, T>>
     constexpr void operator()(F&& f, T&& x) {
-        invoke(std::forward<F>(f), std::get<N / 2>(std::forward<T>(x)));
+        constexpr std::size_t n = std::tuple_size<raw_t<T>>()();
+        invoke(std::forward<F>(f), std::get<n / 2>(std::forward<T>(x)));
+    }
+    template <class F, class T, class... D, class = if_t<is_iterator, T>>
+    constexpr void operator()(F&& f, T&& x, D...) {
+        invoke(std::forward<F>(f), *std::forward<T>(x));
     }
 
     // Invocation
@@ -1308,7 +1396,7 @@ struct invoker<option::access::mono>
     static constexpr void invoke(F&& f, T&& x, D...) {
         for (auto&& e: std::forward<T>(x)) {
             invoke(std::forward<F>(f), std::forward<decltype(e)>(e));
-        }
+        } 
     }
     template <class F, class T, std::size_t... I, class = if_t<is_tuple, T>>
     static constexpr void invoke(F&& f, T&& x, std::index_sequence<I...>) {
@@ -1332,5 +1420,5 @@ struct invoker<option::access::mono>
 
 
 // ========================================================================== //
-#endif // _UNPACK_ALT_BENCHMARK_HPP_INCLUDED
+#endif // _UNPACK_META_BENCHMARK_HPP_INCLUDED
 // ========================================================================== //

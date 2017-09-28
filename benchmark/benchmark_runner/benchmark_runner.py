@@ -26,7 +26,7 @@ if run_config["write_mode"] == "file":
 
 print sys.argv
 
-args = sys.argv[1:9]
+args = sys.argv[1:10]
 args[0] = run_config["executable"]
 print args
 type = typemap[int(args[4])]

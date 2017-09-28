@@ -14,6 +14,7 @@ with open('config/typemap.json') as typemap_f:
     typemap = json.load(typemap_f)["types"]
 
 executable = sys.argv[1]
+print executable
 parser = OutputParser(executable)
 json_builder = JSONBuilder(run_config)
 
@@ -26,14 +27,16 @@ if run_config["write_mode"] == "file":
 print sys.argv
 
 args = sys.argv[1:9]
+args[0] = run_config["executable"]
+print args
 type = typemap[int(args[4])]
 
-if (type["length"] * int(args[3]) * int(args[7]) > 1e9):
+if (type["length"] * int(args[3]) * int(args[4]) > 1e9):
     exit()
 if "unpack_benchmark" in executable:
     args.insert(0, "time")
 timing = parser.parse(subprocess.check_output(args, stderr=subprocess.STDOUT))
  
-entry = json_builder.build(combination, timing, type["type"])
+entry = json_builder.build(args, timing, type["type"])
 writer.write(entry)
 

@@ -21,9 +21,13 @@ parameter_space = [target_executable, tool, orientation, container, type,
         complexity, access, count, size] 
 
 ct = 0
+f_num = 1
 
 for combination in itertools.product(*parameter_space):
     ct += 1
-    with open("com_alt" + str(ct / 1000) + ".sh", "a") as f:
-        f.write(" ".join(list(combination)))
+    with open("app_conf/" + str(f_num) + "m.conf", "a") as f:
+        f.write(str(ct) + " " + " ".join(list(combination)))
         f.write('\n')
+    if (ct % 1000) == 0:
+        ct = 0
+        f_num += 1

@@ -11,6 +11,7 @@ class JSONBuilder:
         elif "unpack_google_benchmark" in exc:
             self.benchmarking_tool = "google_benchmark"
     def build(self, run_params, timing, type):
+        print run_params
         entry = {
 	    "access_pattern": run_params[6],
             "benchmarking_tool": self.benchmarking_tool,
@@ -24,7 +25,8 @@ class JSONBuilder:
             "run_id": self.run_config["run_id"],
             "system": self.run_config["system"],
             "timing": timing,
-            "type": type
+            "type": type,
+            "column": run_params[8] == 'raw'
         }
 	print "type: " + entry["type"] + " orientation: " + entry["orientation"] + \
                 " complexity: " + entry["complexity"] + " access_pattern: " + entry["access_pattern"] + \

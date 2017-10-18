@@ -5,7 +5,7 @@ class DBWriter:
     run_config = None
     def __init__(self, run_config):
         self.run_config = run_config
-        client = pymongo.MongoClient(run_config["db_cluster"])
+        client = pymongo.MongoClient()
         db = client[run_config["db"]]
         self.collection = db[run_config["db_collection"]]
     def write(self, entry):

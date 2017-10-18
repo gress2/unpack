@@ -6,7 +6,7 @@ import pymongo
 class DBReader:
     collection = None
     def __init__(self, run_config):
-        client = pymongo.MongoClient(run_config["db_cluster"])
+        client = pymongo.MongoClient()
         db = client[run_config["db"]]
         self.collection = db[run_config["db_collection"]]
     def buildDict(self, keys, values):

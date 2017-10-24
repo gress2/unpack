@@ -82,7 +82,8 @@ struct opts {
   _function fn;
   access_pattern ap;
   size_t loop_iterations;
-  bool raw_iterator = false;
+  bool column = true;
+  double time_limit = -1;
 
   // example: ./Release/bin/unpack_chrono_benchmark soa vector 1000000 1 simple independent 100
   opts(char* argv[], int argc) {
@@ -131,11 +132,16 @@ struct opts {
 
     loop_iterations = std::stoi(argv[7]);
 
+    if (strncmp(argv[8], "column", 3) == 0) {
+      column = true;
+    } else if (strncmp(argv[8], "nocolumn", 3) == 0) {
+      column = false;
+    } else {
+      throw std::runtime_error("Invalid column choice provided");
+    }
 
-    if (argc >= 9) {
-      if (strncmp(argv[8], "raw", 3) == 0) {
-        raw_iterator = true;
-      }
+    if (argc > 9) {
+      time_limit = std::stod(argv[9]);
     }
   }
 };
@@ -190,9 +196,9 @@ void simple_single_raw(T& container) {
 }
 
 template <typename T>
-void simple_single(T& container, size_t iterations, bool raw_iterator) {
+void simple_single(T& container, size_t iterations, bool column) {
   for (size_t i = 0; i < iterations; i++) {
-    if (raw_iterator) {
+    if (column) {
       simple_single_raw(container); 
     } else { 
       for (auto&& element : container) {
@@ -355,7 +361,7 @@ unsigned char run_fn(opts& _opts, F& start_timing) {
   if (_opts.fn == opts::_function::simple) {
     switch(_opts.ap) {
       case opts::access_pattern::single:
-        simple_single(container, _opts.loop_iterations, _opts.raw_iterator);
+        simple_single(container, _opts.loop_iterations, _opts.column);
         break;
       case opts::access_pattern::independent:
         simple_independent(container, _opts.loop_iterations);

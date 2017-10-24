@@ -7,7 +7,7 @@
 
 int main(int argc, char* argv[]) {
   assert(argc >= 8);
-  unpack_benchmark::opts o(argv, argc);
+  unpack_benchmark::opts o(argv, argc, "chrono");
 
   typename std::chrono::high_resolution_clock::time_point tbegin;
   typename std::chrono::high_resolution_clock::time_point tend;
@@ -17,6 +17,7 @@ int main(int argc, char* argv[]) {
     tbegin = std::chrono::high_resolution_clock::now();
   };
 
+  o.print();
   std::cout << unpack_benchmark::run_benchmark(o, start_timing) << std::endl;
   tend = std::chrono::high_resolution_clock::now();
   duration = tend - tbegin;

@@ -45,6 +45,7 @@ def get_launcher_str():
 for job in jobs/*
 do
   ccc_mpsub ${job}
+  sleep 10
 done
 '''
 

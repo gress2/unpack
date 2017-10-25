@@ -1,5 +1,6 @@
 import itertools
 import json
+import random
 import subprocess
 import sys
 
@@ -21,7 +22,7 @@ for opt_str in run_opt_strs:
     if len(split) == 2:
         opt_args.append(split[1])
 
-timings = cpp_out[1:]
+timings = [float(i) for i in cpp_out[1:]]
 executable = opt_args[0]
 parser = OutputParser(executable)
 json_builder = JSONBuilder(run_config)
@@ -35,6 +36,15 @@ if run_config["write_mode"] == "file":
 args = opt_args[0:9]
 args[0] = run_config["executable"]
 type = typemap[int(args[4])]
+
+num_timings = len(timings)
+avg = sum(timings) / float(num_timings)
+if num_timings > 99:
+    max = timings.pop(timings.index(max(timings)))
+    min = timings.pop(timings.index(min(timings)))
+    samples = random.sample(xrange(num_timings), 97)
+    timings = samples + [max] + [min]
+timings.append(avg)
 
 for timing in timings:
     entry = json_builder.build(args, timing, type["type"])

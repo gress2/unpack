@@ -42,9 +42,13 @@ ccc_mprun -f app_conf/%s.conf''' % (num, cores, int(time_limit) * 60, num, num, 
 
 def get_launcher_str():
     return '''#!/bin/bash
+rm -f jobs/*~
+rm -f jobs/*.e
+rm -f jobs/*.o
+rm -f app_conf/*~
 for job in jobs/*
 do
-  ccc_mpsub ${job}
+  ccc_msub ${job}
   sleep 10
 done
 '''

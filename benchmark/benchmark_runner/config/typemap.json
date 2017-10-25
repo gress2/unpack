@@ -2,26 +2,14 @@
   "types": [
     {
       "type": "std::tuple<char>",
-      "length": 1 
+      "length": 1
     },
     {
       "type": "std::tuple<int>",
       "length": 1
     },
     {
-      "type": "std::tuple<double,double>",
-      "length": 2
-    },
-    {
-      "type": "std::tuple<double,double,double,double,double,double,double,double,double,double,double,double,double,double,double,double>",
-      "length": 16
-    },
-    {
-      "type": "std::tuple<char,int,std::string,double>",
-      "length": 4
-    },
-    {
-      "type": "std::tuple<std::string,std::string>",
+      "type": "std::tuple<int,int>",
       "length": 2
     },
     {
@@ -29,11 +17,71 @@
       "length": 4
     },
     {
+      "type": "std::tuple<int,int,int,int,int,int,int,int>",
+      "length": 8
+    },
+    {
+      "type": "std::tuple<int,int,int,int,int,int,int,int,int,int,int,int,int,int,int,int>",
+      "length": 16
+    },
+    {
+      "type": "std::tuple<double>",
+      "length": 1
+    },
+    {
+      "type": "std::tuple<double,double>",
+      "length": 2
+    },
+    {
       "type": "std::tuple<double,double,double,double>",
       "length": 4
     },
     {
+      "type": "std::tuple<double,double,double,double,double,double,double,double>",
+      "length": 8
+    },
+    {
+      "type": "std::tuple<double,double,double,double,double,double,double,double,double,double,double,double,double,double,double,double>",
+      "length": 16
+    },
+    {
+      "type": "std::tuple<short int,short int,short int,short int>",
+      "length": 4
+    },
+    {
+      "type": "std::tuple<char,char,char,char>",
+      "length": 4
+    },
+    {
+      "type": "std::tuple<long long int, long long int, long long int, long long int>",
+      "length": 4
+    },
+    {
+      "type": "std::tuple<unsigned long long int,unsigned long long int,unsigned long long int,unsigned long long int>",
+      "length": 4
+    },
+    {
+      "type": "std::tuple<float,float,float,float>",
+      "length": 4
+    },
+    {
+      "type": "std::tuple<long double,long double,long double,long double>",
+      "length": 4
+    },
+    {
+      "type": "std::tuple<std::vector<double>,std::vector<double>,std::vector<double>,std::vector<double>>",
+      "length": 4
+    },
+    {
       "type": "std::tuple<std::string,std::string,std::string,std::string>",
+      "length": 4
+    },
+    {
+      "type": "std::tuple<std::vector<int>>",
+      "length": 3
+    },
+    {
+      "type": "std::tuple<char,int,std::string,double>",
       "length": 4
     },
     {
@@ -42,8 +90,7 @@
     },
     {
       "type": "std::tuple<int,double,std::string,std::vector<int>>",
-      "length": 6 
+      "length": 6
     }
   ]
 }
-

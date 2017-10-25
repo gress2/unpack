@@ -2,21 +2,22 @@ import itertools
 import datetime
 import os
 
-executable = "python benchmark_runner.py"
-target_executable = ["unpack_chrono_benchmark"]
+target_executable = ["../../../../build/Release/bin/unpack_chrono_benchmark"]
 data_layout = ["aos", "soa"]
 container = ["vector"]
-container_size = [str(x) for x in [2**0, 2**10, 2**20]]
+container_size = [str(2**x) for x in range(21)]
 type_index = [str(x) for x in [0,1,2,3,4,5,6,7,8,9,10]]
 operation_complexity = ["simple", "complex"]
 access_pattern = ["single", "independent", "combined"]
-iterations = [str(2**x) for x in range(20)]
-columns = ["true", "false"]
+iterations = [str(x) for x in [2**0, 2**5, 2**10, 2**15, 2**20]]
+columns = ["column", "nocolumn"]
+time_limit = ["30"]
+pipe_to = ["| python ../../benchmark_parser.py"]
 
-parameter_space = [[executable], target_executable, data_layout, container, container_size,
-        type_index, operation_complexity, access_pattern, iterations, columns]
+parameter_space = [target_executable, data_layout, container, container_size,
+        type_index, operation_complexity, access_pattern, iterations, columns, time_limit, pipe_to]
 
-base_dir = "run_" + datetime.datetime.now().strftime('%b-%d-%G-%I%M%p')
+base_dir = "run_" + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
 os.makedirs(base_dir)
 os.makedirs(base_dir + "/app_conf")
@@ -53,7 +54,7 @@ for combination in itertools.product(*parameter_space):
             continue
     ct += 1
     with open(base_dir + "/app_conf/" + str(f_num) + ".conf", "a") as f:
-        f.write(str(ct) + " " + " ".join(list(combination)))
+        f.write("1 " + " ".join(list(combination)))
         f.write('\n')
     if (ct % 1000) == 0:
         ct = 0

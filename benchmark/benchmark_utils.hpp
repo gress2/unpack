@@ -199,8 +199,8 @@ template <typename T>
 void simple_single(T& container, size_t iterations, bool column) {
   for (size_t i = 0; i < iterations; i++) {
     if (column) {
-      simple_single_raw(container); 
-    } else { 
+      simple_single_raw(container);
+    } else {
       for (auto&& element : container) {
         simple_op(std::get<0>(element));
       }

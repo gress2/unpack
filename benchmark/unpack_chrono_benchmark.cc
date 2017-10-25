@@ -32,10 +32,10 @@ int main(int argc, char* argv[]) {
 
   if (o.time_limit > 0) {
     tbegin = std::chrono::high_resolution_clock::now();
-    while (duration.count() < o.time_limit) {
+    do {
       std::cout << run(o) << std::endl;
       duration = std::chrono::high_resolution_clock::now() - tbegin;
-    }
+    } while (duration.count() < o.time_limit);
   } else {
     std::cout << run(o) << std::endl;
   }

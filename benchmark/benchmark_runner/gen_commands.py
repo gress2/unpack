@@ -59,7 +59,7 @@ for combination in itertools.product(*parameter_space):
             continue
     ct += 1
     with open(base_dir + "/app_conf/" + str(f_num) + ".conf", "a") as f:
-        f.write("1 " + " ".join(list(combination)))
+        f.write("1 bash -c \"" + " ".join(list(combination)) + "\"")
         f.write('\n')
     if (ct % 1000) == 0:
         ct = 0

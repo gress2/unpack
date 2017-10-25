@@ -2,7 +2,7 @@ import itertools
 import datetime
 import os
 
-target_executable = ["../../../../build/Release/bin/unpack_chrono_benchmark"]
+target_executable = ["../../../build/Release/bin/unpack_chrono_benchmark"]
 data_layout = ["aos", "soa"]
 container = ["vector"]
 container_size = [str(2**x) for x in range(21)]
@@ -12,7 +12,7 @@ access_pattern = ["single", "independent", "combined"]
 iterations = [str(x) for x in [2**0, 2**5, 2**10, 2**15, 2**20]]
 columns = ["column", "nocolumn"]
 time_limit = "30"
-pipe_to = ["| python ../../benchmark_parser.py"]
+pipe_to = ["| python ../benchmark_parser.py"]
 
 parameter_space = [target_executable, data_layout, container, container_size,
         type_index, operation_complexity, access_pattern, iterations, columns, [time_limit], pipe_to]
@@ -32,8 +32,8 @@ def get_job_str(num, cores):
 #MSUB -r run_job_%s
 #MSUB -n %s
 #MSUB -T %s 
-#MSUB -e run_job_%s.e
-#MSUB -o run_job_%s.o
+#MSUB -e jobs/run_job_%s.e
+#MSUB -o jobs/run_job_%s.o
 #MSUB -A gen2287
 #MSUB -q standard
 
@@ -48,8 +48,7 @@ rm -f jobs/*.o
 rm -f app_conf/*~
 for job in jobs/*
 do
-  echo ${job}
-  ccc_msub ${job}
+  echo -n ${job} \" \" && ccc_msub ${job}
   sleep 10
 done
 '''

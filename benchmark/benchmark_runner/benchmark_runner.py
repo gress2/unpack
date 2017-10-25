@@ -36,7 +36,6 @@ args = opt_args[0:9]
 args[0] = run_config["executable"]
 type = typemap[int(args[4])]
 
-
 for timing in timings:
     entry = json_builder.build(args, timing, type["type"])
     writer.write(entry)

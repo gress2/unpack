@@ -11,11 +11,11 @@ operation_complexity = ["simple", "complex"]
 access_pattern = ["single", "independent", "combined"]
 iterations = [str(x) for x in [2**0, 2**5, 2**10, 2**15, 2**20]]
 columns = ["column", "nocolumn"]
-time_limit = ["30"]
+time_limit = "30"
 pipe_to = ["| python ../../benchmark_parser.py"]
 
 parameter_space = [target_executable, data_layout, container, container_size,
-        type_index, operation_complexity, access_pattern, iterations, columns, time_limit, pipe_to]
+        type_index, operation_complexity, access_pattern, iterations, columns, [time_limit], pipe_to]
 
 base_dir = "run_" + datetime.datetime.now().strftime('%Y-%m-%d-%H-%M-%S')
 
@@ -31,14 +31,14 @@ def get_job_str(num, cores):
     return '''#!/bin/bash
 #MSUB -r run_job_%s
 #MSUB -n %s
-#MSUB -T 21600
+#MSUB -T %s 
 #MSUB -e run_job_%s.e
 #MSUB -o run_job_%s.o
 #MSUB -A gen2287
 #MSUB -q standard
 
 set -x
-ccc_mprun -f app_conf/%s.conf''' % (num, cores, num, num, num)
+ccc_mprun -f app_conf/%s.conf''' % (num, cores, int(time_limit) * 60, num, num, num)
 
 def get_launcher_str():
     return '''#!/bin/bash

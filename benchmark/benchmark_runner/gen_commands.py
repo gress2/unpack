@@ -48,6 +48,7 @@ rm -f jobs/*.o
 rm -f app_conf/*~
 for job in jobs/*
 do
+  echo ${job}
   ccc_msub ${job}
   sleep 10
 done

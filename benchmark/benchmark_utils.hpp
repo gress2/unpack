@@ -454,17 +454,33 @@ unsigned char dispatch(opts& _opts, F& start_timing) {
 
 template <typename F>
 unsigned char run_benchmark(opts& _opts, F& start_timing) {
+  // Simplest type
   using type0 = typename std::tuple<char>;
-  using type1 = typename std::tuple<int>;
-  using type2 = typename std::tuple<double, double>;
-  using type3 = typename repeat_type_tuple<double, 8>::type;
-  using type4 = typename std::tuple<char, int, std::string, double>;
-  using type5 = typename std::tuple<std::vector<int>>;
-  using type6 = typename repeat_type_tuple<int, 4>::type;
-  using type7 = typename repeat_type_tuple<double, 4>::type;
-  using type8 = typename repeat_type_tuple<std::string, 4>::type;
-  using type9 = typename std::tuple<std::vector<int>, std::vector<double>>;
-  using type10 = typename std::tuple<int,double,std::string,std::vector<int>>;
+  // Increasing size
+  using type1 = typename repeat_type_tuple<int, 1>::type;
+  using type2 = typename repeat_type_tuple<int, 2>::type;
+  using type3 = typename repeat_type_tuple<int, 8>::type;
+  using type4 = typename repeat_type_tuple<int, 4>::type;
+  using type5 = typename repeat_type_tuple<int, 16>::type;
+  using type6 = typename repeat_type_tuple<double, 1>::type;
+  using type7 = typename repeat_type_tuple<double, 2>::type;
+  using type8 = typename repeat_type_tuple<double, 4>::type;
+  using type9 = typename repeat_type_tuple<double, 8>::type;
+  using type10 = typename repeat_type_tuple<double, 16>::type;
+  // Different native types
+  using type11 = typename repeat_type_tuple<char, 4>::type;
+  using type12 = typename repeat_type_tuple<short int, 4>::type;
+  using type13 = typename repeat_type_tuple<long long int, 4>::type;
+  using type14 = typename repeat_type_tuple<unsigned long long int, 4>::type;
+  using type15 = typename repeat_type_tuple<float, 4>::type;
+  using type16 = typename repeat_type_tuple<long double, 4>::type;
+  using type17 = typename repeat_type_tuple<std::vector<double>, 4>::type;
+  using type18 = typename repeat_type_tuple<std::string, 4>::type;
+  // Misc
+  using type19 = typename std::tuple<std::vector<int>>;
+  using type20 = typename std::tuple<char, int, std::string, double>;
+  using type21 = typename std::tuple<std::vector<int>, std::vector<double>>;
+  using type22 = typename std::tuple<int,double,std::string,std::vector<int>>;
 
   switch (_opts.type_index) {
     case 0:
@@ -499,6 +515,42 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
       break;
     case 10:
       return dispatch<type_map<type10>>(_opts, start_timing);
+      break;
+    case 11:
+      return dispatch<type_map<type11>>(_opts, start_timing);
+      break;
+    case 12:
+      return dispatch<type_map<type12>>(_opts, start_timing);
+      break;
+    case 13:
+      return dispatch<type_map<type13>>(_opts, start_timing);
+      break;
+    case 14:
+      return dispatch<type_map<type14>>(_opts, start_timing);
+      break;
+    case 15:
+      return dispatch<type_map<type15>>(_opts, start_timing);
+      break;
+    case 16:
+      return dispatch<type_map<type16>>(_opts, start_timing);
+      break;
+    case 17:
+      return dispatch<type_map<type17>>(_opts, start_timing);
+      break;
+    case 18:
+      return dispatch<type_map<type18>>(_opts, start_timing);
+      break;
+    case 19:
+      return dispatch<type_map<type19>>(_opts, start_timing);
+      break;
+    case 20:
+      return dispatch<type_map<type20>>(_opts, start_timing);
+      break;
+    case 21:
+      return dispatch<type_map<type21>>(_opts, start_timing);
+      break;
+    case 22:
+      return dispatch<type_map<type22>>(_opts, start_timing);
       break;
     default:
       return 'x';

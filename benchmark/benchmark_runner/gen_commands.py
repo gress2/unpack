@@ -44,7 +44,7 @@ def get_launcher_str():
     return '''#!/bin/bash
 for job in jobs/*
 do
-  ccc_mprun ${job}
+  ccc_mpsub ${job}
 done
 '''
 

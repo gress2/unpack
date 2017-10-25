@@ -9,7 +9,7 @@ type_index = [str(x) for x in [0,1,2,3,4,5,6,7,8,9,10]]
 operation_complexity = ["simple", "complex"]
 access_pattern = ["single", "independent", "combined"]
 iterations = [str(2**x) for x in range(20)]
-columns = ["raw", "no"]
+columns = ["true", "false"]
 
 parameter_space = [[executable], target_executable, data_layout, container, container_size,
         type_index, operation_complexity, access_pattern, iterations, columns]

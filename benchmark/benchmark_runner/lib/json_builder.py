@@ -26,10 +26,10 @@ class JSONBuilder:
             "system": self.run_config["system"],
             "timing": timing,
             "type": type,
-            "column": run_params[8] == 'raw'
+            "column": run_params[8]
         }
 	print "type: " + entry["type"] + " orientation: " + entry["orientation"] + \
                 " complexity: " + entry["complexity"] + " access_pattern: " + entry["access_pattern"] + \
                 " container_sz: " + entry["container_size"] + " iterations: " + str(entry["iterations"]) + \
-                " timing: " + str(entry["timing"])
+                " column: " + entry["column"] + " timing: " + str(entry["timing"])
         return entry

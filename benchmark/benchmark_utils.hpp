@@ -75,6 +75,7 @@ struct opts {
   enum container_type { vector, list, deque };
   enum _function { simple, complex };
 
+  std::string executable;
   data_structure ds;
   container_type ct;
   size_t container_size;
@@ -82,10 +83,33 @@ struct opts {
   _function fn;
   access_pattern ap;
   size_t loop_iterations;
-  bool raw_iterator = false;
+  bool column = true;
+  double time_limit = -1;
+
+  std::string stringified = "";
+
+  std::string format_str(std::string key, std::string value) {
+      return key + "=" + value + ";";
+  }
+
+  void stringify(char* argv[]) {
+    stringified += format_str("executable", executable);
+    stringified += format_str("layout", argv[1]);
+    stringified += format_str("container_type", argv[2]);
+    stringified += format_str("container_size", argv[3]);
+    stringified += format_str("type_index", argv[4]);
+    stringified += format_str("complexity", argv[5]);
+    stringified += format_str("access_pattern", argv[6]);
+    stringified += format_str("iterations", argv[7]);
+    stringified += format_str("column", argv[8]);
+  }
 
   // example: ./Release/bin/unpack_chrono_benchmark soa vector 1000000 1 simple independent 100
-  opts(char* argv[], int argc) {
+  opts(char* argv[], int argc, std::string exec) {
+    executable = exec;
+
+    stringify(argv);
+
     if (strncmp(argv[1], "aos", 3) == 0) {
       ds = opts::data_structure::aos;
     } else if (strncmp(argv[1], "soa", 3) == 0) {
@@ -131,12 +155,21 @@ struct opts {
 
     loop_iterations = std::stoi(argv[7]);
 
-
-    if (argc >= 9) {
-      if (strncmp(argv[8], "raw", 3) == 0) {
-        raw_iterator = true;
-      }
+    if (strncmp(argv[8], "column", 3) == 0) {
+      column = true;
+    } else if (strncmp(argv[8], "nocolumn", 3) == 0) {
+      column = false;
+    } else {
+      throw std::runtime_error("Invalid column choice provided");
     }
+
+    if (argc > 9) {
+      time_limit = std::stod(argv[9]);
+    }
+  }
+
+  void print() {
+    std::cout << stringified << std::endl;
   }
 };
 
@@ -190,11 +223,11 @@ void simple_single_raw(T& container) {
 }
 
 template <typename T>
-void simple_single(T& container, size_t iterations, bool raw_iterator) {
+void simple_single(T& container, size_t iterations, bool column) {
   for (size_t i = 0; i < iterations; i++) {
-    if (raw_iterator) {
-      simple_single_raw(container); 
-    } else { 
+    if (column) {
+      simple_single_raw(container);
+    } else {
       for (auto&& element : container) {
         simple_op(std::get<0>(element));
       }
@@ -355,7 +388,7 @@ unsigned char run_fn(opts& _opts, F& start_timing) {
   if (_opts.fn == opts::_function::simple) {
     switch(_opts.ap) {
       case opts::access_pattern::single:
-        simple_single(container, _opts.loop_iterations, _opts.raw_iterator);
+        simple_single(container, _opts.loop_iterations, _opts.column);
         break;
       case opts::access_pattern::independent:
         simple_independent(container, _opts.loop_iterations);

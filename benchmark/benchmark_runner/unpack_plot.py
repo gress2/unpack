@@ -22,7 +22,7 @@ def json_str_to_title(json_s):
             title += ", "
         if len(title) > 128:
             title += "\n"
-        title += key + " = " + str(dictionary[key]) 
+        title += str(dictionary[key]) 
     return title
 
 def no_unicode_keys(data):

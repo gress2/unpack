@@ -5,7 +5,7 @@ import os
 target_executable = ["../../../build/Release/bin/unpack_chrono_benchmark"]
 data_layout = ["aos", "soa"]
 container = ["vector"]
-container_size = [str(2**x) for x in range(21)]
+container_size = [str(2**x) for x in range(23)]
 type_index = [str(x) for x in [0,1,2,3,4,5,6,7,8,9,10]]
 operation_complexity = ["simple", "complex"]
 access_pattern = ["single", "independent", "combined"]
@@ -31,14 +31,14 @@ def get_job_str(num, cores):
     return '''#!/bin/bash
 #MSUB -r run_job_%s
 #MSUB -n %s
-#MSUB -T %s 
+#MSUB -T %s
 #MSUB -e jobs/run_job_%s.e
 #MSUB -o jobs/run_job_%s.o
 #MSUB -A gen2287
 #MSUB -q standard
 
 set -x
-ccc_mprun -f app_conf/%s.conf''' % (num, cores, int(time_limit), num, num, num)
+ccc_mprun -f app_conf/%s.conf''' % (num, cores, int(time_limit) + 300, num, num, num)
 
 def get_launcher_str():
     return '''#!/bin/bash

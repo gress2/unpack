@@ -1,24 +1,24 @@
-// Compilation: g++ -Wall -Wextra -pedantic -std=c++14 -O3 unpack_benchmark.cpp
-// -o unpack_benchmark
 #include <cassert>
 #include <cmath>
+#include <thread>
 #include "benchmark_utils.hpp"
 #include "unpack.hpp"
 
-template <class Opts>
+template <class Clock = std::chrono::high_resolution_clock, class Opts>
 double run(Opts&& opts) {
-  typename std::chrono::high_resolution_clock::time_point tbegin;
-  typename std::chrono::high_resolution_clock::time_point tend;
+  using clock = Clock;
+  typename clock::time_point tbegin;
+  typename clock::time_point tend;
   std::chrono::duration<double> duration;
   volatile double tmp = 0;
   auto start_timing = [&tbegin]() {
-    tbegin = std::chrono::high_resolution_clock::now();
+    tbegin = clock::now();
   };
   tmp = unpack_benchmark::run_benchmark(std::forward<Opts>(opts), start_timing);
   if (std::isnan(tmp)) {
     std::cerr << tmp << std::endl;
   }
-  tend = std::chrono::high_resolution_clock::now();
+  tend = clock::now();
   duration = tend - tbegin;
   return duration.count();
 }
@@ -26,20 +26,24 @@ double run(Opts&& opts) {
 int main(int argc, char* argv[]) {
   assert(argc >= 9);
   unpack_benchmark::opts o(argv, argc, "unpack_chrono_benchmark");
-  o.print();
-
-  typename std::chrono::high_resolution_clock::time_point tbegin;
-  std::chrono::duration<double> duration;
+  std::chrono::duration<double> tsleep(o.time_limit - 1);
+  std::thread terminator;
+  o.print();  
 
   if (o.time_limit > 0) {
-    tbegin = std::chrono::high_resolution_clock::now();
-    do {
+    terminator = std::thread([=](){
+      std::this_thread::sleep_for(tsleep);
+      std::exit(0);
+    });
+    while (true) {
       std::cout << run(o) << std::endl;
-      duration = std::chrono::high_resolution_clock::now() - tbegin;
-    } while (duration.count() < o.time_limit);
+    }
+    terminator.join();
   } else {
     std::cout << run(o) << std::endl;
   }
 
   return 0;
 }
+
+

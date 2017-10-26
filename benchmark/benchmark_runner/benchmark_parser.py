@@ -44,13 +44,7 @@ args[0] = run_config["executable"]
 type = typemap[int(args[4])]
 
 num_timings = len(timings)
-avg = sum(timings) / float(num_timings)
-if num_timings > 99:
-    max = timings.pop(timings.index(max(timings)))
-    min = timings.pop(timings.index(min(timings)))
-    samples = random.sample(timings, 97)
-    timings = samples + [max] + [min]
-timings.append(avg)
+print(cpp_out[0][:-1] + "=>" + str(num_timings))
 
 filename = None
 for timing in timings:

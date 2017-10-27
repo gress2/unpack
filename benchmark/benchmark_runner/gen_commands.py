@@ -27,7 +27,11 @@ os.makedirs(base_dir + "/jobs")
 ct = 0
 f_num = 1
 
+def three_digit(num):
+    return '%03d' % num 
+
 def get_job_str(num, cores):
+    num = three_digit(num)
     return '''#!/bin/bash
 #MSUB -r run_job_%s
 #MSUB -n %s
@@ -49,24 +53,25 @@ rm -f app_conf/*~
 for job in jobs/*
 do
   echo -n ${job} \" \" && ccc_msub ${job}
-  sleep 10
+  sleep 2
 done
 '''
 
+ncores = 512
 for combination in itertools.product(*parameter_space):
     if combination[9] == "raw":
         if combination[7] != "single":
             continue
     ct += 1
-    with open(base_dir + "/app_conf/" + '%03d' % f_num + ".conf", "a") as f:
+    with open(base_dir + "/app_conf/" + three_digit(f_num) + ".conf", "a") as f:
         f.write("1 bash -c \"" + " ".join(list(combination)) + "\"")
         f.write('\n')
-    if (ct % 1000) == 0:
+    if (ct % ncores) == 0:
         ct = 0
         f_num += 1
 for job in range(1, f_num + 1):
-    with open(base_dir + "/jobs/run_job_" + '%03d' % job, "a") as f:
-        cores = 1000
+    with open(base_dir + "/jobs/run_job_" + three_digit(job), "a") as f:
+        cores = ncores
         if job == f_num:
             cores = ct
         f.write(get_job_str(job, cores))

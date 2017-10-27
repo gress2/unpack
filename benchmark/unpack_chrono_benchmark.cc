@@ -26,6 +26,7 @@ double run(Opts&& opts) {
 int main(int argc, char* argv[]) {
   assert(argc >= 9);
   unpack_benchmark::opts o(argv, argc, "unpack_chrono_benchmark");
+  const std::chrono::seconds onesec(1);
   std::chrono::duration<double> tsleep(o.time_limit - 1);
   std::thread terminator;
   o.print();  
@@ -35,9 +36,9 @@ int main(int argc, char* argv[]) {
       std::this_thread::sleep_for(tsleep);
       std::exit(0);
     });
-    while (true) {
+    do {
       std::cout << run(o) << std::endl;
-    }
+    } while ((std::this_thread::sleep_for(onesec), true));
     terminator.join();
   } else {
     std::cout << run(o) << std::endl;

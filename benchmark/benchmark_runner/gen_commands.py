@@ -58,14 +58,14 @@ for combination in itertools.product(*parameter_space):
         if combination[7] != "single":
             continue
     ct += 1
-    with open(base_dir + "/app_conf/" + str(f_num) + ".conf", "a") as f:
+    with open(base_dir + "/app_conf/" + '%03d' % f_num + ".conf", "a") as f:
         f.write("1 bash -c \"" + " ".join(list(combination)) + "\"")
         f.write('\n')
     if (ct % 1000) == 0:
         ct = 0
         f_num += 1
 for job in range(1, f_num + 1):
-    with open(base_dir + "/jobs/run_job_" + str(job), "a") as f:
+    with open(base_dir + "/jobs/run_job_" + '%03d' % f_num, "a") as f:
         cores = 1000
         if job == f_num:
             cores = ct

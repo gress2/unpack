@@ -65,7 +65,7 @@ for combination in itertools.product(*parameter_space):
         ct = 0
         f_num += 1
 for job in range(1, f_num + 1):
-    with open(base_dir + "/jobs/run_job_" + '%03d' % f_num, "a") as f:
+    with open(base_dir + "/jobs/run_job_" + '%03d' % job, "a") as f:
         cores = 1000
         if job == f_num:
             cores = ct

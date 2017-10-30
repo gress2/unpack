@@ -45,11 +45,11 @@
       "length": 16
     },
     {
-      "type": "std::tuple<short int,short int,short int,short int>",
+      "type": "std::tuple<char,char,char,char>",
       "length": 4
     },
     {
-      "type": "std::tuple<char,char,char,char>",
+      "type": "std::tuple<short int,short int,short int,short int>",
       "length": 4
     },
     {

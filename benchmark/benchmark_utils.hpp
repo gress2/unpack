@@ -459,8 +459,8 @@ unsigned char run_benchmark(opts& _opts, F& start_timing) {
   // Increasing size
   using type1 = typename repeat_type_tuple<int, 1>::type;
   using type2 = typename repeat_type_tuple<int, 2>::type;
-  using type3 = typename repeat_type_tuple<int, 8>::type;
-  using type4 = typename repeat_type_tuple<int, 4>::type;
+  using type3 = typename repeat_type_tuple<int, 4>::type;
+  using type4 = typename repeat_type_tuple<int, 8>::type;
   using type5 = typename repeat_type_tuple<int, 16>::type;
   using type6 = typename repeat_type_tuple<double, 1>::type;
   using type7 = typename repeat_type_tuple<double, 2>::type;

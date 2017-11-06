@@ -3,7 +3,7 @@
   "compiler": "clang-5.0",
   "db": "unpack",
   "db_cluster": "mongodb://tbb_admin:329GlHj9@cluster0-shard-00-00-hwkus.mongodb.net:27017,cluster0-shard-00-01-hwkus.mongodb.net:27017,cluster0-shard-00-02-hwkus.mongodb.net:27017/unpack_benchmarking_test?ssl=true&replicaSet=Cluster0-shard-0&authSource=admin", 
-  "db_collection": "benchmark", 
+  "db_collection": "prod", 
   "file_target": "output",
   "optimization": "O3",
   "run_id": "1",

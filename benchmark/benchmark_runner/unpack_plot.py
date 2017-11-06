@@ -43,7 +43,7 @@ def plot_entry(data, title = "", x = "iterations", y = "timing", line_base = "co
         data_ = { 'x': [], 'y': [] }
         for element in line_base_dict[base]:
             data_['x'].append(float(element[x]))
-            data_['y'].append(float(element[y]))
+            data_['y'].append(np.mean(element[y]))
         data_frame = df.from_dict(data_)
         data_frame.sort('x', inplace=True)
         ax = plt.gca()
@@ -64,11 +64,13 @@ def plot_entry(data, title = "", x = "iterations", y = "timing", line_base = "co
     plt.close()
     
 reader = DBReader(run_config)
-data = reader.getValuesFromCartesian(["container_size", "iterations", "timing"], ["access_pattern", \
-        "compiler", "complexity", "container", "optimization", "orientation", "type", "column"]) 
-titles = {}
+variable = ["container_size", "iterations", "timing"]
+constant = ["access_pattern", "compiler", "complexity", "container", "optimization", \
+        "orientation", "type", "column"]
 
-for entry in data:
-    title = json_str_to_title(entry)
-    plot_entry(data[entry], json_str_to_title(entry), \
-            "iterations", "timing", "container_size")
+query_set, vdict = reader.createQueriesFromCartesian(variable, constant)
+for query in query_set:
+    title = json_str_to_title(json.dumps(query))
+    print(title)
+    data = reader.query(query, vdict)
+    plot_entry(data, title, "iterations", "timing", "container_size")
